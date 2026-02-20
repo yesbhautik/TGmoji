@@ -2,64 +2,138 @@
 
 ## Table of Contents
 
-- [Docker Compose (Recommended)](#docker-compose)
-- [Manual / VPS](#manual)
-- [Vercel](#vercel)
-- [Netlify](#netlify)
+- [Quick Start (Docker)](#quick-start-docker)
+- [Pre-built Image from GHCR](#pre-built-image-from-ghcr)
+- [Build from Source (Docker Compose)](#build-from-source-docker-compose)
+- [Multi-Arch Builds (CI/CD)](#multi-arch-builds-cicd)
+- [Manual / VPS (No Docker)](#manual--vps-no-docker)
 - [Environment Variables](#environment-variables)
+- [SSL/TLS](#ssltls)
 - [Monitoring](#monitoring)
 - [Scaling](#scaling)
 
 ---
 
-## Docker Compose
+## Quick Start (Docker)
 
-The recommended production deployment. Includes the Node.js app with an nginx reverse proxy.
+TGmoji ships as a **single container** that serves both the UI and the API. No nginx or separate containers needed.
 
-### Prerequisites
+```bash
+docker run -d --name tgmoji \
+  -p 3000:3000 \
+  -e SITE_URL=https://tgmoji.yourdomain.com \
+  ghcr.io/yesbhautik/tgmoji:latest
+```
 
-- Docker Engine ≥ 20
-- Docker Compose v2
+Open **http://localhost:3000** — done. UI + API, fully functional.
 
-### Deploy
+> **Tip:** `SITE_URL` is optional. It sets the canonical URL, Open Graph, and JSON-LD meta tags for SEO. Leave it empty for localhost/testing.
+
+---
+
+## Pre-built Image from GHCR
+
+Every push to `main` and every version tag automatically builds multi-arch Docker images (AMD64 + ARM64) and publishes them to **GitHub Container Registry**.
+
+### Available Tags
+
+| Tag | Description |
+|-----|-------------|
+| `ghcr.io/yesbhautik/tgmoji:latest` | Latest build from `main` branch |
+| `ghcr.io/yesbhautik/tgmoji:main` | Same as `latest` |
+| `ghcr.io/yesbhautik/tgmoji:2.0.0` | Specific version release |
+| `ghcr.io/yesbhautik/tgmoji:2.0` | Major.minor version |
+| `ghcr.io/yesbhautik/tgmoji:<sha>` | Specific commit SHA |
+
+### Supported Architectures
+
+| Architecture | Devices |
+|-------------|---------|
+| `linux/amd64` | Standard servers, cloud VMs, Intel/AMD desktops |
+| `linux/arm64` | Raspberry Pi 4+, Apple Silicon (via Docker Desktop), AWS Graviton, Oracle Ampere |
+
+### Pull & Run
+
+```bash
+# Pull the image (Docker auto-selects the right architecture)
+docker pull ghcr.io/yesbhautik/tgmoji:latest
+
+# Run with basic config
+docker run -d --name tgmoji \
+  -p 3000:3000 \
+  ghcr.io/yesbhautik/tgmoji:latest
+
+# Run with full config
+docker run -d --name tgmoji \
+  -p 3000:3000 \
+  -e SITE_URL=https://tgmoji.yourdomain.com \
+  -e CORS_ORIGIN=https://tgmoji.yourdomain.com \
+  -e MAX_CONCURRENT_BROWSERS=3 \
+  -e MAX_QUEUE_SIZE=20 \
+  -e RATE_LIMIT_MAX=100 \
+  -e CONVERT_RATE_LIMIT_MAX=10 \
+  -v tgmoji_output:/app/output \
+  --restart unless-stopped \
+  ghcr.io/yesbhautik/tgmoji:latest
+```
+
+### Update to Latest
+
+```bash
+docker pull ghcr.io/yesbhautik/tgmoji:latest
+docker stop tgmoji && docker rm tgmoji
+# Re-run the docker run command above
+```
+
+---
+
+## Build from Source (Docker Compose)
+
+If you prefer building from source or need to customize the Dockerfile:
 
 ```bash
 # Clone the repo
 git clone https://github.com/yesbhautik/tgmoji.git
 cd tgmoji
 
-# Configure (optional)
+# Configure
 cp .env.example .env
-# Edit .env as needed
+# Edit .env — set SITE_URL, adjust limits, etc.
 
 # Build and start
 docker compose up -d --build
 
 # Verify
-curl http://localhost/api/health
+curl http://localhost:3000/api/health
 ```
 
-### Architecture
+### Using the Pre-built Image with Docker Compose
 
-```
-Internet → nginx :80 → Node.js :3000
-              │
-              └─ Static files served directly
-              └─ /api/* proxied to Node.js
-              └─ Rate limiting at nginx level
-              └─ Gzip compression
+Edit `docker-compose.yml` — comment out the `build:` block and uncomment the `image:` line:
+
+```yaml
+services:
+  tgmoji:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: ghcr.io/yesbhautik/tgmoji:latest
 ```
 
 ### Commands
 
 ```bash
 # View logs
-docker compose logs -f app
+docker compose logs -f tgmoji
 
 # Restart
-docker compose restart app
+docker compose restart tgmoji
 
-# Update (pull + rebuild)
+# Update (pull latest + recreate)
+docker compose pull
+docker compose up -d
+
+# Update (rebuild from source)
 git pull
 docker compose up -d --build
 
@@ -73,19 +147,55 @@ docker compose down -v
 ### Custom Port
 
 ```bash
-# Serve on port 8080 instead of 80
+# Serve on port 8080 instead of 3000
 PUBLIC_PORT=8080 docker compose up -d
 ```
 
-### SSL/TLS
+---
 
-For HTTPS, place a reverse proxy (Caddy, Traefik, or Cloudflare Tunnel) in front of nginx, or modify `nginx/default.conf` to include your SSL certificates.
+## Multi-Arch Builds (CI/CD)
+
+TGmoji includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that automatically builds multi-arch images on:
+
+| Trigger | Tags Created |
+|---------|-------------|
+| Push to `main` | `latest`, `main`, `<commit-sha>` |
+| Version tag (`v2.1.0`) | `2.1.0`, `2.1`, `<commit-sha>` |
+| Pull request | Build only (not pushed) — validates the Dockerfile |
+
+### How It Works
+
+```
+Push to main/tag
+  → GitHub Actions triggers
+  → QEMU sets up ARM64 emulation
+  → Docker Buildx builds linux/amd64 + linux/arm64
+  → Images pushed to ghcr.io/yesbhautik/tgmoji
+  → GitHub Actions cache speeds up future builds
+```
+
+### Creating a Release
+
+```bash
+# Tag a release
+git tag v2.1.0
+git push origin v2.1.0
+
+# This triggers the workflow and creates:
+# - ghcr.io/yesbhautik/tgmoji:2.1.0
+# - ghcr.io/yesbhautik/tgmoji:2.1
+# - ghcr.io/yesbhautik/tgmoji:latest
+```
+
+### Self-Hosting the Workflow
+
+If you fork the repo, the workflow works out of the box. `GITHUB_TOKEN` is automatically available — no additional secrets needed. Images will be published to your own GHCR namespace.
 
 ---
 
-## Manual
+## Manual / VPS (No Docker)
 
-Run on a VPS or bare-metal server without Docker.
+Run directly on a server without Docker.
 
 ### Prerequisites
 
@@ -114,23 +224,28 @@ Edit `.env`:
 ```env
 NODE_ENV=production
 PORT=3000
+SITE_URL=https://tgmoji.yourdomain.com
 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 PUPPETEER_SKIP_DOWNLOAD=true
 ```
 
+> **Note:** When running without Docker, the `__SITE_URL__` placeholders in `index.html` are not automatically replaced. Either run `sed -i "s|__SITE_URL__|https://tgmoji.yourdomain.com|g" public/index.html` once, or leave them empty (relative URLs work fine for single-domain setups).
+
 ### Run
 
 ```bash
-# Start
+# Start directly
 node src/index.js
 
 # Or with a process manager (recommended)
-npx pm2 start src/index.js --name tgmoji -i max
+npx pm2 start src/index.js --name tgmoji
 npx pm2 save
 npx pm2 startup
 ```
 
 ### Reverse Proxy (nginx)
+
+Optional — put nginx in front for SSL termination and caching:
 
 ```nginx
 server {
@@ -152,95 +267,93 @@ server {
 
 ---
 
-## Vercel
-
-Vercel deploys **only the static frontend**. The conversion API must be hosted separately (Docker on a VPS, Cloud Run, etc.).
-
-### Deploy
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-```
-
-### Configure API URL
-
-After deploying the frontend, set the API URL so the frontend knows where to send conversion requests.
-
-Add this to `public/index.html` before the `<script src="app.js">` tag:
-
-```html
-<script>
-  window.__API_BASE_URL__ = 'https://api.tgmoji.ybxlabs.com';
-</script>
-```
-
-Or set it at build time via Vercel environment variables.
-
-### Why Not Full-Stack on Vercel?
-
-Puppeteer requires a Chromium binary (~280 MB) which exceeds Vercel's serverless function size limits (250 MB). The conversion process also exceeds the default 10s function timeout.
-
----
-
-## Netlify
-
-Same as Vercel — **static frontend only**.
-
-### Deploy
-
-```bash
-# Install Netlify CLI
-npm i -g netlify-cli
-
-# Deploy
-netlify deploy --prod
-```
-
-### Configure API URL
-
-Same as Vercel — add the `window.__API_BASE_URL__` script tag to `index.html`.
-
----
-
 ## Environment Variables
 
-See [.env.example](../.env.example) for the complete list.
+**All configuration is done via environment variables.** Nobody needs to edit any source files.
+
+See [.env.example](../.env.example) for the full list with defaults.
+
+### Site / Branding
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SITE_URL` | _(empty)_ | Public URL for canonical/OG/JSON-LD meta tags. Injected into HTML at container start. Leave empty for relative URLs. |
+| `PUBLIC_PORT` | `3000` | Host port exposed by Docker Compose |
 
 ### Core
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `3000` | Server port |
+| `PORT` | `3000` | Server port inside the container |
 | `NODE_ENV` | `development` | `development` or `production` |
-| `CORS_ORIGIN` | `*` | Allowed origins |
+| `CORS_ORIGIN` | `*` | Allowed CORS origins (comma-separated or `*`) |
 
 ### Performance
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MAX_CONCURRENT_BROWSERS` | `3` | Puppeteer browser pool size |
-| `MIN_BROWSERS` | `1` | Pre-warmed browsers |
-| `MAX_QUEUE_SIZE` | `20` | Max pending jobs |
-| `JOB_TIMEOUT_MS` | `120000` | Job timeout (ms) |
+| `MIN_BROWSERS` | `1` | Pre-warmed browsers at startup |
+| `BROWSER_IDLE_TIMEOUT_MS` | `60000` | Kill idle browsers after this time |
+| `MAX_QUEUE_SIZE` | `20` | Max pending jobs before rejecting (429) |
+| `JOB_TIMEOUT_MS` | `120000` | Abort a single job after this time |
 
 ### Security
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `RATE_LIMIT_MAX` | `100` | Global rate limit per 15 min |
-| `CONVERT_RATE_LIMIT_MAX` | `10` | Conversion rate limit per 15 min |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rate limit window (15 min default) |
+| `RATE_LIMIT_MAX` | `100` | Global rate limit per window per IP |
+| `CONVERT_RATE_LIMIT_MAX` | `10` | Conversion rate limit per window per IP |
 | `MAX_FILE_SIZE_MB` | `10` | Max upload file size |
 
 ### Maintenance
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLEANUP_INTERVAL_MIN` | `30` | Cleanup frequency (minutes) |
-| `OUTPUT_TTL_MIN` | `60` | Output file lifetime (minutes) |
+| `CLEANUP_INTERVAL_MIN` | `30` | Run file cleanup this often |
+| `OUTPUT_TTL_MIN` | `60` | Delete output files older than this |
+
+### How `SITE_URL` Injection Works
+
+The `docker-entrypoint.sh` script runs at container start and replaces `__SITE_URL__` placeholders in `public/index.html` with the value of the `SITE_URL` env var. This sets:
+
+- `<link rel="canonical">` tag
+- Open Graph (`og:url`) tag
+- JSON-LD structured data (`url` field)
+
+If `SITE_URL` is empty, these tags use relative URLs which works fine for most setups.
+
+---
+
+## SSL/TLS
+
+The container serves HTTP on port 3000. For HTTPS, use one of these approaches:
+
+### Cloudflare Tunnel (Easiest)
+
+```bash
+# Install cloudflared
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
+chmod +x /usr/local/bin/cloudflared
+
+# Create a tunnel
+cloudflared tunnel create tgmoji
+cloudflared tunnel route dns tgmoji tgmoji.yourdomain.com
+cloudflared tunnel run --url http://localhost:3000 tgmoji
+```
+
+### Caddy (Auto-SSL)
+
+```
+tgmoji.yourdomain.com {
+    reverse_proxy localhost:3000
+}
+```
+
+### Traefik / nginx + Certbot
+
+Standard reverse proxy with Let's Encrypt certificates.
 
 ---
 
@@ -253,45 +366,62 @@ curl http://localhost:3000/api/health
 ```
 
 Returns:
-- Server status and uptime
+- Server status, version, and uptime
 - Queue depth and active jobs
-- Browser pool utilization
+- Browser pool utilization (size, available, borrowed, pending)
 - Memory usage (RSS and heap)
 
 ### Docker Health Check
 
-The Docker container includes a built-in health check that polls `/api/health` every 30 seconds. Use `docker ps` to see the health status.
+The container includes a built-in health check that polls `/api/health` every 30s:
 
-### Recommended Monitoring
+```bash
+# Check container health
+docker ps
+# CONTAINER ID  IMAGE              STATUS              PORTS
+# abc123        tgmoji:latest      Up 5m (healthy)     0.0.0.0:3000->3000/tcp
+```
 
-- **Uptime:** Ping `/api/health` from UptimeRobot, Better Stack, etc.
-- **Metrics:** Consume the health endpoint with Prometheus/Grafana
-- **Logs:** `docker compose logs -f app` or forward to a log aggregator
+### Recommended Monitoring Stack
+
+| Tool | Purpose |
+|------|---------|
+| **UptimeRobot / Better Stack** | Ping `/api/health` for uptime alerts |
+| **Prometheus + Grafana** | Scrape health endpoint for metrics |
+| **Docker logs** | `docker logs -f tgmoji` for request logs |
+| **Loki** | Aggregate logs from multiple containers |
 
 ---
 
 ## Scaling
 
-### Vertical (single instance)
+### Vertical (Single Instance)
 
 Increase `MAX_CONCURRENT_BROWSERS` based on available RAM:
 
-| RAM | Recommended Browsers |
-|-----|---------------------|
-| 1 GB | 1–2 |
-| 2 GB | 2–3 |
-| 4 GB | 3–5 |
-| 8 GB | 5–8 |
+| Server RAM | Recommended Browsers | Expected Throughput |
+|-----------|---------------------|-------------------|
+| 1 GB | 1–2 | ~2 concurrent conversions |
+| 2 GB | 2–3 | ~3 concurrent conversions |
+| 4 GB | 3–5 | ~5 concurrent conversions |
+| 8 GB | 5–8 | ~8 concurrent conversions |
 
 Each Chromium instance uses ~150–300 MB RAM.
 
-### Horizontal (multiple instances)
+### Horizontal (Multiple Instances)
 
-Use Docker Compose's `deploy.replicas` or a container orchestrator:
+Run multiple containers behind a load balancer:
 
 ```bash
-# Scale to 3 app containers behind nginx
-docker compose up -d --scale app=3
+# Using Docker Compose
+docker compose up -d --scale tgmoji=3
+
+# Or run separate containers
+for i in 1 2 3; do
+  docker run -d --name tgmoji-$i \
+    -p $((3000+i)):3000 \
+    ghcr.io/yesbhautik/tgmoji:latest
+done
 ```
 
-> **Note:** When scaling horizontally, update `nginx/default.conf` to load balance across instances, and consider shared storage (e.g., S3) for output files.
+> **Note:** When scaling horizontally, put a load balancer (nginx, Caddy, Traefik, or cloud LB) in front, and consider shared storage (S3, NFS) for output files if cross-instance downloads are needed.

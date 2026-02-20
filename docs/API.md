@@ -3,11 +3,11 @@
 ## Base URL
 
 ```
-http://localhost:3000    (development)
-https://tgmoji.ybxlabs.com  (production)
+http://localhost:3000          (local / Docker)
+https://your-site.com         (production — set via SITE_URL env)
 ```
 
-All endpoints are prefixed with `/api`.
+All endpoints are prefixed with `/api`. The base URL is determined by where you deploy the container — no code changes needed.
 
 ---
 
@@ -23,13 +23,13 @@ TGmoji does not require authentication. Rate limiting is applied per IP address.
 
 Convert an animated SVG file to GIF, Telegram emoji WebM, and/or Telegram sticker WebM.
 
-**Rate Limit:** 10 requests per 15 minutes per IP.
+**Rate Limit:** 10 requests per 15 minutes per IP (configurable via `CONVERT_RATE_LIMIT_MAX`).
 
 #### Request
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `svg` | File | ✅ | — | The SVG file to convert (max 10 MB) |
+| `svg` | File | ✅ | — | The SVG file to convert (max `MAX_FILE_SIZE_MB`, default 10 MB) |
 | `gifWidth` | Number | ❌ | `386` | GIF output width (16–2048 px) |
 | `gifHeight` | Number | ❌ | `310` | GIF output height (16–2048 px) |
 | `fps` | Number | ❌ | `30` | Frame rate (1–60) |
@@ -46,6 +46,11 @@ Convert an animated SVG file to GIF, Telegram emoji WebM, and/or Telegram sticke
 #### Example
 
 ```bash
+# Convert with default settings
+curl -X POST http://localhost:3000/api/convert \
+  -F "svg=@animation.svg"
+
+# Convert with custom settings
 curl -X POST http://localhost:3000/api/convert \
   -F "svg=@animation.svg" \
   -F "gifWidth=400" \
@@ -90,9 +95,9 @@ curl -X POST http://localhost:3000/api/convert \
 | Status | Body | Condition |
 |--------|------|-----------|
 | `400` | `{ "error": "No SVG file uploaded" }` | Missing file |
-| `413` | `{ "error": "File too large..." }` | File exceeds limit |
+| `413` | `{ "error": "File too large..." }` | File exceeds `MAX_FILE_SIZE_MB` |
 | `429` | `{ "error": "Too many conversions..." }` | Rate limit exceeded |
-| `429` | `{ "error": "Server is busy..." }` | Queue full |
+| `429` | `{ "error": "Server is busy..." }` | Queue full (`MAX_QUEUE_SIZE` reached) |
 | `500` | `{ "error": "Conversion failed" }` | Internal error |
 
 ---
@@ -117,13 +122,13 @@ The file is returned as an attachment download with the appropriate MIME type.
 |--------|------|-----------|
 | `404` | `{ "error": "File not found" }` | File doesn't exist or expired |
 
-> **Note:** Output files are automatically deleted after 60 minutes (configurable via `OUTPUT_TTL_MIN`).
+> **Note:** Output files are automatically deleted after `OUTPUT_TTL_MIN` minutes (default: 60).
 
 ---
 
 ### `GET /api/health`
 
-Health check endpoint with system diagnostics.
+Health check endpoint with system diagnostics. Used by Docker's built-in `HEALTHCHECK` and external monitoring.
 
 #### Response — `200 OK`
 
@@ -173,10 +178,12 @@ Get current job queue statistics.
 
 ## Rate Limiting
 
-| Scope | Limit | Window |
-|-------|-------|--------|
-| Global (all endpoints) | 100 requests | 15 minutes |
-| Conversion (`/api/convert`) | 10 requests | 15 minutes |
+All rate limits are configurable via environment variables.
+
+| Scope | Default Limit | Window | Env Var |
+|-------|------|--------|---------|
+| Global (all endpoints) | 100 requests | `RATE_LIMIT_WINDOW_MS` (15 min) | `RATE_LIMIT_MAX` |
+| Conversion (`/api/convert`) | 10 requests | `RATE_LIMIT_WINDOW_MS` (15 min) | `CONVERT_RATE_LIMIT_MAX` |
 
 Rate limit headers are included in responses:
 
@@ -194,4 +201,10 @@ RateLimit-Reset: 1708431300
 |--------|-------------|
 | `X-Request-Id` | Unique request identifier for tracing |
 | `X-RateLimit-*` | Rate limiting information |
-| Standard Helmet headers | Security headers (CSP, XSS, etc.) |
+| Standard Helmet headers | Security headers (CSP, XSS, HSTS, etc.) |
+
+---
+
+## Configurable Limits
+
+All limits mentioned in this document can be changed via environment variables without modifying code. See the [Deployment Guide](DEPLOYMENT.md#environment-variables) for the full list.
