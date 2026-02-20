@@ -28,22 +28,24 @@ function createPool() {
             }
 
             const launchArgs = {
-                headless: 'new',
+                headless: true,
+                dumpio: false, // Set to true for Chromium stderr debugging
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-extensions',
-                    '--single-process',
-                    '--no-zygote',
+                    '--no-first-run',
+                    '--no-default-browser-check',
+                    '--disable-background-networking',
+                    '--disable-translate',
+                    '--disable-sync',
                     // Crash handler flags (crashpad binary is a no-op stub in Docker)
                     '--disable-crashpad',
                     '--disable-breakpad',
                     '--disable-crash-reporter',
                 ],
-                // Pipe mode for better error capture
-                pipe: true,
             };
 
             if (config.chromiumPath) {

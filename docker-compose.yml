@@ -13,6 +13,11 @@ services:
     container_name: tgmoji
     restart: unless-stopped
     shm_size: '1gb'
+    # Chromium needs these to run in multi-process mode inside containers
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_ADMIN
     ports:
       - "${PUBLIC_PORT:-3000}:3000"
     environment:
