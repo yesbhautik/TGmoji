@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.local
+output/*
+uploads/*
+temp/*
+*.md
+.DS_Store
+.vscode
+.idea
+Dockerfile
+docker-compose.yml
+nginx/

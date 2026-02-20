@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary SEO -->
+  <title>TGmoji — SVG to GIF & Telegram Emoji/Sticker Converter | Free Tool by Yesbhautik</title>
+  <meta name="description"
+    content="Free online SVG to GIF converter by Bhautik Bavadiya (Yesbhautik) & YBX Labs. Convert animated SVG files to GIF, Telegram emoji WebM and Telegram sticker WebM with full transparency. Fast, private, enterprise-ready.">
+  <meta name="keywords"
+    content="SVG to GIF, SVG converter, animated SVG, Telegram emoji converter, Telegram sticker maker, WebM converter, SVG to WebM, SVG animation, GIF maker, Yesbhautik, YBX Labs, Bhautik Bavadiya, yesbhautik.co.in, ybxlabs.com, free online converter, transparency GIF, VP9 WebM, animated sticker">
+  <meta name="author" content="Bhautik Bavadiya (Yesbhautik) — YBX Labs">
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+  <link rel="canonical" href="https://tgmoji.ybxlabs.com/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tgmoji.ybxlabs.com/">
+  <meta property="og:title" content="SVG to GIF & Telegram Emoji Converter — Free Tool by YBX Labs">
+  <meta property="og:description"
+    content="Convert animated SVGs to GIF, Telegram emoji & sticker WebM with transparency. Built by Bhautik Bavadiya (Yesbhautik) at YBX Labs.">
+  <meta property="og:site_name" content="SVG Converter by YBX Labs">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SVG to GIF & Telegram Converter — Free Online Tool">
+  <meta name="twitter:description"
+    content="Convert animated SVGs to GIF, Telegram emoji & sticker formats. By Yesbhautik & YBX Labs.">
+  <meta name="twitter:creator" content="@yesbhautik">
+  <meta name="twitter:site" content="@ybxlabs">
+
+  <!-- Theme & Icons -->
+  <meta name="theme-color" content="#6366f1">
+  <meta name="msapplication-TileColor" content="#0a0e1a">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "SVG to GIF & Telegram Converter",
+    "url": "https://tgmoji.ybxlabs.com/",
+    "description": "Free online tool to convert animated SVG files to GIF, Telegram emoji WebM, and Telegram sticker WebM with full transparency support.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires a modern web browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "YBX Labs",
+      "url": "https://ybxlabs.com",
+      "founder": {
+        "@type": "Person",
+        "name": "Bhautik Bavadiya",
+        "alternateName": "Yesbhautik",
+        "url": "https://yesbhautik.co.in"
+      }
+    },
+    "featureList": [
+      "SVG to GIF conversion",
+      "SVG to Telegram emoji WebM",
+      "SVG to Telegram sticker WebM",
+      "Transparency support",
+      "Aspect ratio lock",
+      "Configurable FPS and duration"
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Background Orbs -->
+  <div class="bg-orbs">
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        TGmoji by YBX Labs
+      </div>
+      <h1>TGmoji</h1>
+      <p>Convert animated SVGs to GIF, Telegram emoji, and sticker formats with full transparency</p>
+    </header>
+
+    <!-- Upload Section -->
+    <section class="glass-card" id="uploadSection">
+      <div class="card-title">
+        <div class="icon">📁</div>
+        Upload SVG
+      </div>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">📂</div>
+        <h3>Drop your animated SVG here</h3>
+        <p>or <span class="browse-link" id="browseLink">browse files</span> to select</p>
+        <input type="file" id="fileInput" class="file-input" accept=".svg,image/svg+xml">
+      </div>
+
+      <div class="file-info" id="fileInfo">
+        <span class="file-icon">📄</span>
+        <div class="file-details">
+          <div class="file-name" id="fileName">-</div>
+          <div class="file-size" id="fileSize">-</div>
+        </div>
+        <button class="remove-btn" id="removeFile" title="Remove file">✕</button>
+      </div>
+
+      <!-- SVG Preview -->
+      <div class="svg-preview-area" id="svgPreviewArea">
+        <div class="card-title" style="margin-top: 0.5rem;">
+          <div class="icon">👁</div>
+          Preview
+        </div>
+        <div class="svg-preview-container" id="svgPreview"></div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <div class="content-grid content-grid-3">
+
+      <!-- GIF Settings -->
+      <section class="glass-card" id="gifSettings">
+        <div class="card-title">
+          <div class="icon">🖼</div>
+          GIF Output
+        </div>
+
+        <label class="toggle-group" style="margin-bottom: 1rem;">
+          <div class="toggle-switch">
+            <input type="checkbox" id="generateGif" checked>
+            <span class="toggle-slider"></span>
+          </div>
+          <div>
+            <div class="toggle-label">Generate GIF</div>
+            <div class="toggle-desc">Animated GIF with transparency</div>
+          </div>
+        </label>
+
+        <div id="gifForm">
+          <!-- Aspect Ratio Lock -->
+          <label class="toggle-group" style="margin-bottom: 1rem;">
+            <div class="toggle-switch">
+              <input type="checkbox" id="lockAspectRatio" checked>
+              <span class="toggle-slider"></span>
+            </div>
+            <div>
+              <div class="toggle-label">🔗 Lock Aspect Ratio</div>
+              <div class="toggle-desc">Auto-adjust the other dimension</div>
+            </div>
+          </label>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="gifWidth">Width (px)</label>
+              <input type="number" class="form-input" id="gifWidth" value="386" min="16" max="2048">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gifHeight">Height (px)</label>
+              <input type="number" class="form-input" id="gifHeight" value="310" min="16" max="2048">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Telegram Emoji Settings -->
+      <section class="glass-card" id="webmSettings">
+        <div class="card-title">
+          <div class="icon">💬</div>
+          Telegram Emoji
+        </div>
+
+        <label class="toggle-group" style="margin-bottom: 1rem;">
+          <div class="toggle-switch">
+            <input type="checkbox" id="generateWebm" checked>
+            <span class="toggle-slider"></span>
+          </div>
+          <div>
+            <div class="toggle-label">Generate WebM</div>
+            <div class="toggle-desc">VP9, 100×100px, ≤256 KB</div>
+          </div>
+        </label>
+
+        <div class="form-grid" id="webmForm">
+          <div class="form-group full-width">
+            <label class="form-label" for="telegramSize">Size (px)</label>
+            <input type="number" class="form-input" id="telegramSize" value="100" min="16" max="512">
+            <span class="form-hint">Telegram requires exactly 100×100 for emoji</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Telegram Sticker Settings -->
+      <section class="glass-card" id="stickerSettings">
+        <div class="card-title">
+          <div class="icon">🏷️</div>
+          Telegram Sticker
+        </div>
+
+        <label class="toggle-group" style="margin-bottom: 1rem;">
+          <div class="toggle-switch">
+            <input type="checkbox" id="generateSticker" checked>
+            <span class="toggle-slider"></span>
+          </div>
+          <div>
+            <div class="toggle-label">Generate Sticker</div>
+            <div class="toggle-desc">VP9, 512px side, ≤256 KB</div>
+          </div>
+        </label>
+
+        <div id="stickerForm">
+          <div class="sticker-info-box">
+            <span class="sticker-info-label">Output size</span>
+            <span class="sticker-info-value" id="stickerDims">512 × 411</span>
+          </div>
+          <span class="form-hint">One side is exactly 512px; the other scales to keep the SVG's aspect ratio</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Common Settings -->
+    <section class="glass-card" style="margin-top: 1.5rem;">
+      <div class="card-title">
+        <div class="icon">⚙️</div>
+        Animation Settings
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="fps">Frame Rate (FPS)</label>
+          <input type="number" class="form-input" id="fps" value="30" min="1" max="60">
+          <span class="form-hint">Higher = smoother but larger file</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="duration">Duration (seconds)</label>
+          <input type="number" class="form-input" id="duration" value="2" min="0.5" max="10" step="0.1">
+          <span class="form-hint">One full animation cycle</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Convert Button -->
+    <div class="convert-section">
+      <button class="convert-btn" id="convertBtn" disabled>
+        <span class="btn-icon">⚡</span>
+        Convert SVG
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section" id="progressSection">
+      <div class="glass-card">
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">Starting conversion...</div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-message" id="errorMessage"></div>
+
+    <!-- Results -->
+    <section class="results-section" id="resultsSection">
+      <div class="glass-card">
+        <div class="card-title">
+          <div class="icon">✅</div>
+          Output Files
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+      <p>TGmoji v2.0 — SVG to GIF & Telegram Converter</p>
+      <p>Built with ❤️ by <a href="https://yesbhautik.co.in" title="Bhautik Bavadiya — Yesbhautik" rel="author">Bhautik
+          Bavadiya (Yesbhautik)</a> · <a href="https://ybxlabs.com" title="YBX Labs — Software & AI" rel="author">YBX
+          Labs</a></p>
+      <p class="footer-tech">Powered by Puppeteer + FFmpeg · Enterprise-Ready · Open Source</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

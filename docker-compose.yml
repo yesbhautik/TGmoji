@@ -1,0 +1,59 @@
+# ──────────────────────────────────────────────────
+# Docker Compose — Production Stack
+# app (Node.js) + nginx (reverse proxy)
+# ──────────────────────────────────────────────────
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: svg-converter-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MAX_CONCURRENT_BROWSERS=${MAX_CONCURRENT_BROWSERS:-3}
+      - MAX_QUEUE_SIZE=${MAX_QUEUE_SIZE:-20}
+      - CLEANUP_INTERVAL_MIN=${CLEANUP_INTERVAL_MIN:-30}
+      - OUTPUT_TTL_MIN=${OUTPUT_TTL_MIN:-60}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
+      - CONVERT_RATE_LIMIT_MAX=${CONVERT_RATE_LIMIT_MAX:-10}
+    volumes:
+      - output_data:/app/output
+    healthcheck:
+      test: [ "CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    networks:
+      - converter-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: svg-converter-nginx
+    restart: unless-stopped
+    ports:
+      - "${PUBLIC_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/usr/share/nginx/html:ro
+      - output_data:/app/output:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - converter-net
+
+volumes:
+  output_data:
+
+
+networks:
+  converter-net:
+    driver: bridge

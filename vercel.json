@@ -1,0 +1,34 @@
+{
+    "buildCommand": "",
+    "outputDirectory": "public",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "X-Frame-Options",
+                    "value": "SAMEORIGIN"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                }
+            ]
+        },
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=604800, immutable"
+                }
+            ]
+        }
+    ]
+}

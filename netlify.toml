@@ -1,0 +1,34 @@
+# ──────────────────────────────────────────────────
+# Netlify — Static Frontend Deployment
+# The conversion API must be hosted separately.
+# Set the API URL via the VITE_API_URL env var in
+# Netlify dashboard, or edit window.__API_BASE_URL__
+# in index.html.
+# ──────────────────────────────────────────────────
+
+[build]
+  publish = "public"
+  command = ""         # No build step needed
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
