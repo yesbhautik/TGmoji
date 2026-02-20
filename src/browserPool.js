@@ -35,19 +35,12 @@ function createPool() {
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-extensions',
-                    '--single-process',
                     '--no-zygote',
-                    // Prevent chrome_crashpad_handler errors in Docker
+                    // Crash handler flags (belt-and-suspenders — handler binary removed in Dockerfile)
                     '--disable-crashpad',
                     '--disable-breakpad',
-                    `--crash-dumps-dir=${crashDumpDir}`,
-                    '--disable-features=VizDisplayCompositor',
+                    '--disable-crash-reporter',
                 ],
-                // Suppress crashpad pipes
-                env: {
-                    ...process.env,
-                    CHROME_CRASHPAD_PIPE_NAME: '',
-                },
             };
 
             if (config.chromiumPath) {

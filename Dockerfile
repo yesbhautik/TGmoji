@@ -16,16 +16,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-freefont-ttf \
     fonts-noto-color-emoji \
     dumb-init \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # Remove crashpad handler — it fails in containers and is not needed
+    && find / -name 'chrome_crashpad_handler' -delete 2>/dev/null || true
 
 # Tell Puppeteer to use system Chromium (no download)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Create non-root user
-RUN groupadd -r tgmoji && useradd -r -g tgmoji -G audio,video tgmoji \
-    && mkdir -p /app /app/uploads /app/output /app/temp /tmp/chromium-crash-dumps \
-    && chown -R tgmoji:tgmoji /app /tmp/chromium-crash-dumps
+# Create non-root user with a home directory (Chromium needs ~/.config)
+RUN groupadd -r tgmoji && useradd -r -g tgmoji -G audio,video -m -d /home/tgmoji tgmoji \
+    && mkdir -p /app /app/uploads /app/output /app/temp \
+    && mkdir -p /home/tgmoji/.config/chromium/Crash\ Reports/pending \
+    && chown -R tgmoji:tgmoji /app /home/tgmoji
 
 WORKDIR /app
 
