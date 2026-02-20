@@ -35,12 +35,15 @@ function createPool() {
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-extensions',
+                    '--single-process',
                     '--no-zygote',
-                    // Crash handler flags (belt-and-suspenders — handler binary removed in Dockerfile)
+                    // Crash handler flags (crashpad binary is a no-op stub in Docker)
                     '--disable-crashpad',
                     '--disable-breakpad',
                     '--disable-crash-reporter',
                 ],
+                // Pipe mode for better error capture
+                pipe: true,
             };
 
             if (config.chromiumPath) {
@@ -89,6 +92,11 @@ function createPool() {
 
     pool.on('factoryCreateError', (err) => {
         console.error('[BrowserPool] Factory create error:', err.message);
+        // Log full stderr from Chromium for debugging
+        if (err.stack && err.stack !== err.message) {
+            const stderrLines = err.stack.split('\n').slice(0, 10).join('\n');
+            console.error('[BrowserPool] Details:', stderrLines);
+        }
     });
 
     pool.on('factoryDestroyError', (err) => {
