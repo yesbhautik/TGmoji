@@ -12,6 +12,7 @@ services:
     # image: ghcr.io/yesbhautik/tgmoji:latest
     container_name: tgmoji
     restart: unless-stopped
+    shm_size: '1gb'
     ports:
       - "${PUBLIC_PORT:-3000}:3000"
     environment:

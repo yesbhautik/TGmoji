@@ -24,8 +24,8 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Create non-root user
 RUN groupadd -r tgmoji && useradd -r -g tgmoji -G audio,video tgmoji \
-    && mkdir -p /app /app/uploads /app/output /app/temp \
-    && chown -R tgmoji:tgmoji /app
+    && mkdir -p /app /app/uploads /app/output /app/temp /tmp/chromium-crash-dumps \
+    && chown -R tgmoji:tgmoji /app /tmp/chromium-crash-dumps
 
 WORKDIR /app
 

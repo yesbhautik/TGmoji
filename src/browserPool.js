@@ -5,12 +5,28 @@
 const genericPool = require('generic-pool');
 const puppeteer = require('puppeteer');
 const config = require('./config');
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 
 let pool = null;
+let _consecutiveFailures = 0;
+const MAX_BACKOFF_MS = 30000;
+
+// Ensure crash dump directory exists (prevents crashpad errors in Docker)
+const crashDumpDir = path.join(os.tmpdir(), 'chromium-crash-dumps');
+try { fs.mkdirSync(crashDumpDir, { recursive: true }); } catch (_) { }
 
 function createPool() {
     const factory = {
         async create() {
+            // Exponential backoff if previous launches failed
+            if (_consecutiveFailures > 0) {
+                const backoff = Math.min(1000 * Math.pow(2, _consecutiveFailures - 1), MAX_BACKOFF_MS);
+                console.log(`[BrowserPool] Backing off ${backoff}ms after ${_consecutiveFailures} failures`);
+                await new Promise(r => setTimeout(r, backoff));
+            }
+
             const launchArgs = {
                 headless: 'new',
                 args: [
@@ -21,16 +37,32 @@ function createPool() {
                     '--disable-extensions',
                     '--single-process',
                     '--no-zygote',
+                    // Prevent chrome_crashpad_handler errors in Docker
+                    '--disable-crashpad',
+                    '--disable-breakpad',
+                    `--crash-dumps-dir=${crashDumpDir}`,
+                    '--disable-features=VizDisplayCompositor',
                 ],
+                // Suppress crashpad pipes
+                env: {
+                    ...process.env,
+                    CHROME_CRASHPAD_PIPE_NAME: '',
+                },
             };
 
             if (config.chromiumPath) {
                 launchArgs.executablePath = config.chromiumPath;
             }
 
-            const browser = await puppeteer.launch(launchArgs);
-            console.log(`[BrowserPool] Created browser (PID: ${browser.process()?.pid})`);
-            return browser;
+            try {
+                const browser = await puppeteer.launch(launchArgs);
+                _consecutiveFailures = 0; // Reset on success
+                console.log(`[BrowserPool] Created browser (PID: ${browser.process()?.pid})`);
+                return browser;
+            } catch (err) {
+                _consecutiveFailures++;
+                throw err;
+            }
         },
 
         async destroy(browser) {
