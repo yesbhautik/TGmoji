@@ -1,8 +1,9 @@
 # ──────────────────────────────────────────────────
-# Production Dockerfile for SVG Converter
-# Multi-stage: system Chromium + FFmpeg + Node.js
+# TGmoji — Production Dockerfile
+# Multi-arch (AMD64 + ARM64) · Chromium + FFmpeg
+# UI + API served from a single container
 # ──────────────────────────────────────────────────
-FROM node:20-slim AS base
+FROM node:20-slim
 
 # Install system dependencies: Chromium, FFmpeg, fonts
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,14 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dumb-init \
     && rm -rf /var/lib/apt/lists/*
 
-# Tell Puppeteer to use system Chromium
+# Tell Puppeteer to use system Chromium (no download)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Create non-root user
-RUN groupadd -r converter && useradd -r -g converter -G audio,video converter \
+RUN groupadd -r tgmoji && useradd -r -g tgmoji -G audio,video tgmoji \
     && mkdir -p /app /app/uploads /app/output /app/temp \
-    && chown -R converter:converter /app
+    && chown -R tgmoji:tgmoji /app
 
 WORKDIR /app
 
@@ -36,17 +37,19 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY src/ ./src/
 COPY public/ ./public/
 COPY server.js .env.example ./
+COPY docker-entrypoint.sh /usr/local/bin/
 
-# Set production defaults
+# Ensure entrypoint is executable
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Make public/ writable (entrypoint injects env vars into HTML)
+RUN chown -R tgmoji:tgmoji /app
+
+# Production defaults
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV MAX_CONCURRENT_BROWSERS=3
-ENV MAX_QUEUE_SIZE=20
 
-# Create writable directories
-RUN chown -R converter:converter /app
-
-USER converter
+USER tgmoji
 
 EXPOSE 3000
 
@@ -54,6 +57,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD node -e "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 
-# Use dumb-init for proper signal handling (PID 1)
-ENTRYPOINT ["dumb-init", "--"]
+# dumb-init for PID 1 signal handling → entrypoint injects env → node starts
+ENTRYPOINT ["dumb-init", "--", "docker-entrypoint.sh"]
 CMD ["node", "src/index.js"]

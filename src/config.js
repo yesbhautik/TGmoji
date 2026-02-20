@@ -30,6 +30,9 @@ const config = {
 
     // Puppeteer executable (for Docker / system Chromium)
     chromiumPath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+
+    // Site URL (for SEO/meta tags — injected into HTML by docker-entrypoint.sh)
+    siteUrl: (process.env.SITE_URL || '').replace(/\/+$/, ''),
 };
 
 module.exports = config;
