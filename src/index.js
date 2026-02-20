@@ -17,6 +17,9 @@ const cleanup = require('./cleanup');
 
 const app = express();
 
+// ── Trust proxy (required behind reverse proxies like nginx, EasyPanel, Cloudflare) ──
+app.set('trust proxy', 1);
+
 // ── Security ──
 app.use(helmet({
     crossOriginEmbedderPolicy: false,

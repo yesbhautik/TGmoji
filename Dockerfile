@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-color-emoji \
     dumb-init \
     && rm -rf /var/lib/apt/lists/* \
-    # Remove crashpad handler — it fails in containers and is not needed
-    && find / -name 'chrome_crashpad_handler' -delete 2>/dev/null || true
+    # Replace crashpad handler with a no-op stub — Chromium needs to find
+    # the binary (or it FATAL-crashes), but it doesn't need to actually work.
+    && find / -name 'chrome_crashpad_handler' -type f \
+    -exec sh -c 'echo "#!/bin/sh\nexit 0" > "$1" && chmod +x "$1"' _ {} \; 2>/dev/null || true
 
 # Tell Puppeteer to use system Chromium (no download)
 ENV PUPPETEER_SKIP_DOWNLOAD=true
