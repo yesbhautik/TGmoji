@@ -1,19 +1,15 @@
 # ──────────────────────────────────────────────────
-# Cloudflare Pages — TGmoji v2 Static Deployment
-# 100% client-side — no build step or Workers needed.
+# Cloudflare — TGmoji v2 Static Deployment
+# 100% client-side — serves static assets only.
 #
-# Usage:
-#   1. Connect your GitHub repo in the Cloudflare Dashboard
-#   2. Wrangler will use this config automatically
-#   3. Or deploy manually: npx wrangler pages deploy public/
+# Works with both:
+#   wrangler deploy           (Workers + static assets)
+#   wrangler pages deploy     (Pages)
 # ──────────────────────────────────────────────────
 
 name = "tgmoji"
 compatibility_date = "2024-01-01"
 
-# ── Pages project ──
-[pages]
-build_output_dir = "public"
-
-# No build command — TGmoji is purely static
-# build_command = ""
+# Serve the public/ directory as static assets
+[assets]
+directory = "./public"
