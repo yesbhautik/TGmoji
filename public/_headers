@@ -1,29 +1,14 @@
-[
-  {
-    "for": "/*",
-    "values": {
-      "X-Frame-Options": "SAMEORIGIN",
-      "X-Content-Type-Options": "nosniff",
-      "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
-    }
-  },
-  {
-    "for": "/*.js",
-    "values": {
-      "Cache-Control": "public, max-age=604800, immutable"
-    }
-  },
-  {
-    "for": "/*.css",
-    "values": {
-      "Cache-Control": "public, max-age=604800, immutable"
-    }
-  },
-  {
-    "for": "/*.svg",
-    "values": {
-      "Cache-Control": "public, max-age=604800"
-    }
-  }
-]
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/*.js
+  Cache-Control: public, max-age=604800, immutable
+
+/*.css
+  Cache-Control: public, max-age=604800, immutable
+
+/*.svg
+  Cache-Control: public, max-age=604800
