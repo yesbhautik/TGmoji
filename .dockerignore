@@ -1,0 +1,15 @@
+.git
+.github
+.gitignore
+.gitattributes
+.DS_Store
+node_modules
+docs
+*.md
+!README.md
+logo.svg
+logo2.svg
+package-lock.json
+wrangler.toml
+vercel.json
+netlify.toml

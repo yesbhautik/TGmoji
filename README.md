@@ -148,20 +148,35 @@ cd tgmoji/public
 python3 -m http.server 8000
 ```
 
-### Method 5: Docker (optional)
+### Method 5: Docker
 
-Even though TGmoji doesn't need Docker, you can use a lightweight container:
-
-```dockerfile
-FROM nginx:alpine
-COPY public/ /usr/share/nginx/html/
-EXPOSE 80
-```
+**Option A — Pull pre-built image from GHCR:**
 
 ```bash
-docker build -t tgmoji .
-docker run -p 8080:80 tgmoji
+docker pull ghcr.io/yesbhautik/tgmoji:latest
+docker run -d -p 8080:80 --name tgmoji ghcr.io/yesbhautik/tgmoji:latest
 ```
+
+Open **http://localhost:8080**.
+
+**Option B — Docker Compose:**
+
+```bash
+git clone https://github.com/yesbhautik/tgmoji.git
+cd tgmoji
+docker compose up -d
+```
+
+**Option C — Build locally:**
+
+```bash
+git clone https://github.com/yesbhautik/tgmoji.git
+cd tgmoji
+docker build -t tgmoji .
+docker run -d -p 8080:80 --name tgmoji tgmoji
+```
+
+> **Image details:** `nginx:alpine` base (~7 MB), multi-arch (`amd64` + `arm64`), includes healthcheck, security headers, and gzip compression.
 
 ### Method 6: Cloudflare Pages
 
@@ -279,10 +294,17 @@ tgmoji/
 │   ├── _headers                # Cloudflare Pages headers config
 │   └── _routes.json            # Cloudflare Pages routing config
 │
+├── .github/workflows/
+│   └── docker-build.yml        # CI/CD: build & push Docker image to GHCR
+│
 ├── docs/                       # Documentation
 │   ├── API.md                  # Client-side API reference
 │   └── DEPLOYMENT.md           # Platform deployment guide
 │
+├── Dockerfile                  # Docker image (nginx:alpine)
+├── docker-compose.yml          # Docker Compose config
+├── nginx.conf                  # Nginx config for Docker container
+├── .dockerignore               # Docker build context exclusions
 ├── wrangler.toml               # Cloudflare Pages/Workers config
 ├── vercel.json                 # Vercel config
 ├── netlify.toml                # Netlify config

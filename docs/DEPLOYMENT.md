@@ -230,30 +230,65 @@ Caddy handles SSL automatically.
 
 ### Docker
 
-Although TGmoji doesn't need Docker, a container can be convenient:
+TGmoji provides a pre-built Docker image on GitHub Container Registry, automatically built via CI/CD on every push to `main`.
 
-```dockerfile
-FROM nginx:alpine
-COPY public/ /usr/share/nginx/html/
-EXPOSE 80
-```
+#### Pull & Run (fastest)
 
 ```bash
+docker pull ghcr.io/yesbhautik/tgmoji:latest
+docker run -d -p 8080:80 --name tgmoji ghcr.io/yesbhautik/tgmoji:latest
+```
+
+Open **http://localhost:8080**.
+
+The image is **multi-arch** (`linux/amd64` + `linux/arm64`) — works on Intel, AMD, Apple Silicon, Raspberry Pi, AWS Graviton, etc.
+
+#### Docker Compose
+
+```bash
+git clone https://github.com/yesbhautik/tgmoji.git
+cd tgmoji
+docker compose up -d
+```
+
+The included `docker-compose.yml` maps port `8080:80` by default. Edit it to change:
+
+```yaml
+ports:
+  - "3000:80"   # Change 3000 to any port you want
+```
+
+#### Build Locally
+
+```bash
+git clone https://github.com/yesbhautik/tgmoji.git
+cd tgmoji
 docker build -t tgmoji .
 docker run -d -p 8080:80 --name tgmoji tgmoji
 ```
 
-### Docker Compose
+#### Image Details
 
-```yaml
-version: '3'
-services:
-  tgmoji:
-    build: .
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-```
+| Property | Value |
+|----------|-------|
+| Base image | `nginx:alpine` (~7 MB) |
+| Architectures | `linux/amd64`, `linux/arm64` |
+| Healthcheck | `wget -qO- http://localhost/` every 30s |
+| Security headers | X-Frame-Options, X-Content-Type-Options, Referrer-Policy |
+| Compression | Gzip (HTML, CSS, JS, SVG) |
+| Registry | `ghcr.io/yesbhautik/tgmoji` |
+
+#### CI/CD Pipeline
+
+The GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically:
+
+1. Triggers on pushes to `main` and version tags (`v*`)
+2. Builds multi-arch images using Docker Buildx + QEMU
+3. Pushes to GitHub Container Registry (`ghcr.io`)
+4. Tags: `latest`, branch name, semver, and commit SHA
+5. Uses GitHub Actions cache for fast incremental builds
+
+No secrets setup required — the workflow uses `GITHUB_TOKEN` which is automatically available.
 
 ### Python (quick test)
 
