@@ -1,84 +1,245 @@
-# 🚀 Deployment Guide
+# 🚀 Deployment & Self-Hosting Guide
 
-TGmoji is a **100% client-side** static site. Deploy it anywhere that serves HTML files.
-
----
-
-## Vercel (Recommended)
-
-1. Push your repo to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your repository
-4. Set **Root Directory** to `public/`
-5. Click **Deploy**
-
-Or one-click: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yesbhautik/tgmoji)
+TGmoji is a **100% client-side** static site. There is **no server, no backend, no database**. Deploy it anywhere that serves files over HTTP.
 
 ---
 
-## Netlify
+## ⚡ One-Click Deploy
 
-1. Push your repo to GitHub
-2. Go to [netlify.com](https://netlify.com)
-3. New Site → Import from Git
-4. Set **Publish directory** to `public/`
-5. Click **Deploy**
+### Vercel (Recommended)
 
-Or one-click: [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yesbhautik/tgmoji)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yesbhautik/tgmoji)
 
----
+Or manually:
 
-## GitHub Pages
+1. Push repo to GitHub
+2. Go to [vercel.com](https://vercel.com) → Import project
+3. Root Directory: `public/`
+4. Click **Deploy**
 
-1. Go to your repository → **Settings** → **Pages**
-2. Source: **Deploy from a branch**
-3. Branch: `main` (or `v2`), folder: `/public`
-4. Save
+### Netlify
 
-Your site will be live at `https://yourusername.github.io/tgmoji/`.
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yesbhautik/tgmoji)
 
----
+Or manually:
 
-## Cloudflare Pages
+1. New Site → Import from Git
+2. Publish directory: `public/`
+3. Build command: _(leave empty — no build step)_
+4. Click **Deploy**
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages
-2. Create a project → Connect to Git
-3. Build settings:
-   - **Build command**: _(leave empty)_
-   - **Build output directory**: `public/`
+### Cloudflare Pages
+
+1. Dashboard → Pages → Create a project → Connect to Git
+2. Build command: _(leave empty)_
+3. Build output directory: `public/`
 4. Deploy
 
+### GitHub Pages
+
+1. Repository → Settings → Pages
+2. Source: `main` branch, `/public` folder
+3. Save → Live at `https://yourusername.github.io/tgmoji/`
+
 ---
 
-## Local Development
+## 🏠 Self-Hosting
 
-```bash
-npm run dev
-# Opens at http://localhost:3000
+### Why Self-Host?
+
+- **Complete control** — run on your own infrastructure
+- **Air-gapped environments** — works fully offline once loaded
+- **Custom domain & branding** — no third-party badge
+- **Compliance** — keep everything on-premises for strict data policies
+- **Zero cost** — no hosting fees if you already have a server
+
+### What You Need
+
+- Any HTTP server (Nginx, Apache, Caddy, lighttpd, Python, Node.js)
+- No runtime dependencies (no Node.js, no Docker, no FFmpeg)
+- **Just the `public/` folder**
+
+### Files Served
+
+```
+public/
+├── index.html          # Main page
+├── app.js              # UI logic
+├── converter.js        # Conversion engine
+├── gif.worker.js       # GIF encoding worker
+└── style.css           # Styles
 ```
 
-This uses `npx serve` — no dependencies to install.
+That's it. 5 files. ~50 KB total.
 
 ---
 
-## Custom Domain / SSL
+### Nginx
 
-Since TGmoji is a static site, SSL works out of the box with any of the above platforms. For a custom domain:
+```nginx
+server {
+    listen 80;
+    server_name tgmoji.example.com;
+    root /var/www/tgmoji/public;
+    index index.html;
 
-1. Add your domain in the platform's dashboard (Vercel/Netlify/Cloudflare)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|woff2|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Security headers
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header Referrer-Policy strict-origin-when-cross-origin;
+}
+```
+
+```bash
+git clone https://github.com/yesbhautik/tgmoji.git /var/www/tgmoji
+sudo systemctl reload nginx
+```
+
+### Apache
+
+```apache
+<VirtualHost *:80>
+    ServerName tgmoji.example.com
+    DocumentRoot /var/www/tgmoji/public
+
+    <Directory /var/www/tgmoji/public>
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # Cache static assets
+    <FilesMatch "\.(js|css|svg|woff2)$">
+        ExpiresActive On
+        ExpiresDefault "access plus 30 days"
+    </FilesMatch>
+</VirtualHost>
+```
+
+### Caddy
+
+```
+tgmoji.example.com {
+    root * /var/www/tgmoji/public
+    file_server
+    encode gzip
+}
+```
+
+Caddy handles SSL automatically.
+
+### Docker
+
+Although TGmoji doesn't need Docker, a container can be convenient:
+
+```dockerfile
+FROM nginx:alpine
+COPY public/ /usr/share/nginx/html/
+EXPOSE 80
+```
+
+```bash
+docker build -t tgmoji .
+docker run -d -p 8080:80 --name tgmoji tgmoji
+```
+
+### Docker Compose
+
+```yaml
+version: '3'
+services:
+  tgmoji:
+    build: .
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+```
+
+### Python (quick test)
+
+```bash
+cd tgmoji/public
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+### Node.js (npx serve)
+
+```bash
+cd tgmoji
+npm run dev
+# or directly:
+npx -y serve public -l 3000
+```
+
+---
+
+## 🔐 Custom Domain & SSL
+
+### With Vercel/Netlify/Cloudflare
+
+1. Add your domain in the platform dashboard
 2. Update DNS (CNAME or A record as instructed)
-3. SSL certificates are provisioned automatically
+3. SSL certificates are automatically provisioned
+
+### Self-Hosted (Let's Encrypt)
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d tgmoji.example.com
+```
+
+Certbot handles certificate renewal automatically.
 
 ---
 
-## No Server Required
+## 🌐 Offline / Air-Gapped Use
 
-Unlike v1, TGmoji v2 runs **entirely in the browser**:
+TGmoji works **fully offline** once the page has loaded. The only external resource loaded at page-load is:
 
-- ❌ No Docker
-- ❌ No Node.js server
-- ❌ No Puppeteer / Chromium
-- ❌ No FFmpeg
-- ❌ No environment variables
-- ❌ No database
-- ✅ Just static HTML, CSS, and JavaScript
+| Resource | Purpose | Can Be Removed? |
+|----------|---------|----------------|
+| Google Fonts (Inter) | Typography | Yes — falls back to system fonts |
+| gif.js CDN | GIF encoder library | Already loaded locally via `gif.worker.js` |
+
+To make it fully air-gapped:
+
+1. Download the `Inter` font and serve it locally
+2. Update `style.css` to reference the local font file instead of the Google Fonts URL
+
+After that, **zero network requests** are made — ever.
+
+---
+
+## 🔄 Updating
+
+```bash
+cd /var/www/tgmoji
+git pull origin main
+# No build step needed — changes are live immediately
+```
+
+---
+
+## ❌ What TGmoji Does NOT Need
+
+| Dependency | Required? |
+|------------|-----------|
+| Node.js runtime | ❌ No |
+| npm install | ❌ No (only for `npx serve` dev server) |
+| Docker | ❌ No |
+| Puppeteer / Chromium | ❌ No |
+| FFmpeg | ❌ No |
+| Database | ❌ No |
+| Environment variables | ❌ No |
+| API keys | ❌ No |
+| Build step | ❌ No |

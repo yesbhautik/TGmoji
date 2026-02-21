@@ -884,7 +884,175 @@ body::before {
     }
 }
 
+/* ── Benefits Grid ── */
+.seo-section {
+    margin-top: 2rem;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.benefit-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: border-color 0.3s ease, transform 0.2s ease;
+}
+
+.benefit-item:hover {
+    border-color: var(--border-active);
+    transform: translateY(-2px);
+}
+
+.benefit-icon {
+    font-size: 1.75rem;
+    display: block;
+    margin-bottom: 0.6rem;
+}
+
+.benefit-item h3 {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+.benefit-item p {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.benefit-item strong {
+    color: var(--accent-blue-light);
+}
+
+/* ── How It Works ── */
+.how-it-works {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.step h3 {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.step p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+
+/* ── FAQ Accordion ── */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.faq-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.faq-item[open] {
+    border-color: var(--border-active);
+}
+
+.faq-item summary {
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: '+';
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    transition: transform 0.2s ease;
+}
+
+.faq-item[open] summary::after {
+    content: '−';
+}
+
+.faq-item p {
+    padding: 0 1.1rem 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.faq-item code {
+    background: rgba(99, 102, 241, 0.15);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--accent-blue-light);
+}
+
+.faq-item a {
+    color: var(--accent-blue-light);
+    text-decoration: none;
+}
+
+.faq-item a:hover {
+    text-decoration: underline;
+}
+
 /* ── Responsive ── */
+@media (max-width: 768px) {
+    .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 640px) {
     .app-container {
         padding: 1.25rem 1rem 3rem;
@@ -904,5 +1072,9 @@ body::before {
 
     .drop-zone {
         padding: 2rem 1rem;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
     }
 }

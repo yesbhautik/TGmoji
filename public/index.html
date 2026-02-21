@@ -22,12 +22,18 @@
     content="Convert animated SVGs to GIF, Telegram emoji & sticker WebM with transparency. Runs 100% in your browser — your files never leave your device. Built by Yesbhautik at YBX Labs.">
   <meta property="og:site_name" content="SVG Converter by YBX Labs">
   <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://tgmoji.ybxlabs.com">
+  <meta property="og:image" content="https://tgmoji.ybxlabs.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <link rel="canonical" href="https://tgmoji.ybxlabs.com">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SVG to GIF & Telegram Converter — Free Online Tool">
   <meta name="twitter:description"
     content="Convert animated SVGs to GIF, Telegram emoji & sticker formats. 100% client-side — no uploads. By Yesbhautik & YBX Labs.">
+  <meta name="twitter:image" content="https://tgmoji.ybxlabs.com/og-image.png">
   <meta name="twitter:creator" content="@yesbhautik">
   <meta name="twitter:site" content="@ybxlabs">
 
@@ -70,8 +76,68 @@
       "100% client-side processing",
       "No file uploads - complete privacy",
       "Transparency support",
+      "CSS @keyframes and SMIL animation support",
       "Aspect ratio lock",
-      "Configurable FPS and duration"
+      "Configurable FPS and duration",
+      "Self-hostable static site"
+    ]
+  }
+  </script>
+
+  <!-- FAQ Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is TGmoji free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, TGmoji is completely free and open source. There are no paywalls, watermarks, or usage limits."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Are my files uploaded to any server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. TGmoji processes everything inside your browser using JavaScript. Your SVG files never leave your device. There is no server, no backend, and no data collection."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What SVG animation types are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TGmoji supports both CSS @keyframes animations (opacity, filter, stroke-dasharray, transform, etc.) and SMIL animations (<animate>, <animateTransform>, <set>). It handles the vast majority of animated SVGs found in the wild."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What browsers are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Chrome, Edge, and Firefox fully support all output formats (GIF + WebM). Safari can generate GIFs but does not support VP9 WebM encoding via MediaRecorder."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I self-host TGmoji?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. TGmoji is a purely static site (HTML + CSS + JS). You can host it on any static file server — Vercel, Netlify, GitHub Pages, Cloudflare Pages, Nginx, Apache, or even open the HTML file directly."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are Telegram's sticker and emoji requirements?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Telegram emoji must be 100×100 pixels, VP9 WebM format, under 256 KB, and up to 3 seconds long. Telegram stickers must have one side at 512 pixels, VP9 WebM, under 256 KB, and up to 3 seconds."
+        }
+      }
     ]
   }
   </script>
@@ -291,13 +357,143 @@
       </div>
     </section>
 
+    <!-- Why TGmoji -->
+    <section class="glass-card seo-section" style="margin-top: 2rem;">
+      <div class="card-title">
+        <div class="icon">🛡️</div>
+        Why TGmoji?
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-item">
+          <span class="benefit-icon">🔒</span>
+          <h3>Complete Privacy</h3>
+          <p>Your files <strong>never leave your device</strong>. There's no server, no upload, no data collection. All
+            conversion happens inside your browser's JavaScript engine.</p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">⚡</span>
+          <h3>Instant Processing</h3>
+          <p>No waiting for server queues. Conversion starts immediately on your machine using Canvas API, Web Workers,
+            and MediaRecorder — powered by your own CPU.</p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">🎨</span>
+          <h3>Full Animation Support</h3>
+          <p>Handles both <strong>CSS @keyframes</strong> and <strong>SMIL &lt;animate&gt;</strong> elements. Supports
+            opacity, transforms, stroke-dasharray, filters, colours, and more.</p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">🖼️</span>
+          <h3>GIF Transparency</h3>
+          <p>Proper GIF transparency with key-colour compositing. No white backgrounds — your animated GIFs look clean
+            on any surface.</p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">💬</span>
+          <h3>Telegram-Ready Output</h3>
+          <p>Generates WebM VP9 files that meet Telegram's exact specs — 100×100 for emoji, 512px for stickers, under
+            256 KB, with proper codec settings.</p>
+        </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">🌍</span>
+          <h3>Self-Hostable</h3>
+          <p>A pure static site with <strong>zero dependencies</strong>. Deploy on Vercel, Netlify, GitHub Pages, your
+            own Nginx server, or even run locally. No Docker, no Node.js, no database.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="glass-card seo-section" style="margin-top: 1.5rem;">
+      <div class="card-title">
+        <div class="icon">🔧</div>
+        How It Works
+      </div>
+      <div class="how-it-works">
+        <div class="step">
+          <span class="step-number">1</span>
+          <div>
+            <h3>Upload Your SVG</h3>
+            <p>Drag and drop or browse to select your animated SVG file. TGmoji instantly previews the animation in the
+              browser.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          <div>
+            <h3>Configure Output</h3>
+            <p>Choose GIF, Telegram Emoji, and/or Telegram Sticker formats. Adjust dimensions, frame rate, and animation
+              duration.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          <div>
+            <h3>Convert Locally</h3>
+            <p>Your browser renders the SVG in a hidden iframe, captures each animation frame via the Web Animations
+              API, and encodes the output using gif.js workers and MediaRecorder VP9.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-number">4</span>
+          <div>
+            <h3>Download</h3>
+            <p>Files are generated as in-memory Blobs and downloaded directly. Nothing is ever sent to a server.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="glass-card seo-section" style="margin-top: 1.5rem;">
+      <div class="card-title">
+        <div class="icon">❓</div>
+        Frequently Asked Questions
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Is TGmoji free?</summary>
+          <p>Yes — completely free, open source (MIT license), no ads, no watermarks, no usage limits.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Are my SVG files uploaded anywhere?</summary>
+          <p>No. All processing runs in your browser. Your files never leave your device. There's no backend server, no
+            API, and no data collection of any kind.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What animation types are supported?</summary>
+          <p>TGmoji handles both CSS <code>@keyframes</code> animations and SMIL <code>&lt;animate&gt;</code> /
+            <code>&lt;animateTransform&gt;</code> elements — including opacity, fill, stroke-dasharray, transforms,
+            filters, and colours.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does it work in Safari?</summary>
+          <p>Safari can generate animated GIFs. However, WebM VP9 encoding requires Chrome, Edge, or Firefox because
+            Safari's MediaRecorder doesn't support VP9.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What are Telegram's sticker/emoji format requirements?</summary>
+          <p><strong>Emoji:</strong> 100×100px, VP9 WebM, ≤256 KB, ≤3 seconds.<br><strong>Stickers:</strong> 512px on
+            one side, VP9 WebM, ≤256 KB, ≤3 seconds.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I self-host TGmoji?</summary>
+          <p>Absolutely. TGmoji is a static site (HTML + CSS + JS) with zero dependencies. Deploy on Vercel, Netlify,
+            GitHub Pages, Cloudflare Pages, your own Nginx, or any HTTP server. See the <a
+              href="https://github.com/yesbhautik/TGmoji#-self-hosting" rel="noopener">self-hosting guide</a>.</p>
+        </details>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer" role="contentinfo">
       <p>TGmoji v2.0 — SVG to GIF & Telegram Converter</p>
       <p>Built with ❤️ by <a href="https://yesbhautik.co.in" title="Bhautik Bavadiya — Yesbhautik" rel="author">Bhautik
           Bavadiya (Yesbhautik)</a> · <a href="https://ybxlabs.com" title="YBX Labs — Software & AI" rel="author">YBX
           Labs</a></p>
-      <p class="footer-tech">100% Client-Side · Canvas API + Web Workers · Open Source</p>
+      <p class="footer-tech">100% Client-Side · Canvas API + Web Workers · Open Source ·
+        <a href="https://github.com/yesbhautik/TGmoji" rel="noopener" title="TGmoji on GitHub">⭐ Star on GitHub</a>
+      </p>
     </footer>
 
   </div>
