@@ -191,14 +191,10 @@ body::before {
 }
 
 .card-title .icon {
-    width: 36px;
-    height: 36px;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-sm);
-    background: var(--gradient-primary);
-    font-size: 1rem;
 }
 
 /* ── Drop Zone ── */
@@ -948,16 +944,14 @@ body::before {
 
 .step-number {
     flex-shrink: 0;
-    width: 36px;
+    width: 28px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: var(--gradient-primary);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.95rem;
+    color: var(--accent-blue-light);
+    font-weight: 800;
+    font-size: 1.5rem;
 }
 
 .step h3 {
