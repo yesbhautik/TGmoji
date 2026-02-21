@@ -41,6 +41,97 @@ Or manually:
 2. Source: `main` branch, `/public` folder
 3. Save → Live at `https://yourusername.github.io/tgmoji/`
 
+### Cloudflare Pages
+
+TGmoji ships with ready-to-use Cloudflare config files:
+
+| File | Purpose |
+|------|---------|
+| `wrangler.toml` | Wrangler CLI project config |
+| `public/_headers` | Security & caching headers (auto-applied by CF Pages) |
+| `public/_routes.json` | Routing rules |
+
+#### Option A — Cloudflare Dashboard
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **Create**
+2. Select **Pages** → **Connect to Git**
+3. Choose your GitHub repo
+4. Build settings:
+   - **Framework preset**: None
+   - **Build command**: _(leave empty — no build step)_
+   - **Build output directory**: `public/`
+5. Click **Save and Deploy**
+
+Your site will be live at `https://tgmoji.pages.dev` within seconds.
+
+#### Option B — Wrangler CLI
+
+```bash
+# Install Wrangler globally
+npm install -g wrangler
+
+# Log in to your Cloudflare account
+wrangler login
+
+# Deploy directly from the CLI
+wrangler pages deploy public/ --project-name=tgmoji
+```
+
+To create a new project on first deploy:
+
+```bash
+wrangler pages project create tgmoji
+wrangler pages deploy public/ --project-name=tgmoji
+```
+
+#### Option C — GitHub Actions CI/CD
+
+Automatically deploy on every push to `main`:
+
+```yaml
+# .github/workflows/cloudflare-pages.yml
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public/ --project-name=tgmoji
+```
+
+**Required GitHub Secrets:**
+
+| Secret | Where to find it |
+|--------|-----------------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Dashboard → My Profile → API Tokens → Create Token → "Edit Cloudflare Workers" template |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → any domain → Overview → right sidebar → Account ID |
+
+#### Cloudflare Custom Domain
+
+1. In the Cloudflare Pages project → **Custom domains** → **Set up a custom domain**
+2. Enter your domain (e.g., `tgmoji.example.com`)
+3. Cloudflare handles DNS + SSL automatically (if the domain is on Cloudflare)
+4. For external domains, add the CNAME record shown in the dashboard
+
+#### Pages vs Workers
+
+TGmoji uses **Cloudflare Pages** (static hosting), not Workers. No edge compute is needed because all processing runs in the user's browser. The `wrangler.toml` is configured for Pages deployment only.
+
 ---
 
 ## 🏠 Self-Hosting

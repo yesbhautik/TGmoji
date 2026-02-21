@@ -1,0 +1,19 @@
+# ──────────────────────────────────────────────────
+# Cloudflare Pages — TGmoji v2 Static Deployment
+# 100% client-side — no build step or Workers needed.
+#
+# Usage:
+#   1. Connect your GitHub repo in the Cloudflare Dashboard
+#   2. Wrangler will use this config automatically
+#   3. Or deploy manually: npx wrangler pages deploy public/
+# ──────────────────────────────────────────────────
+
+name = "tgmoji"
+compatibility_date = "2024-01-01"
+
+# ── Pages project ──
+[pages]
+build_output_dir = "public"
+
+# No build command — TGmoji is purely static
+# build_command = ""

@@ -76,6 +76,7 @@ Open **http://localhost:3000**. That's it — no `npm install`, no build step, n
 |----------|--------|
 | **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yesbhautik/tgmoji) |
 | **Netlify** | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yesbhautik/tgmoji) |
+| **Cloudflare Pages** | [Deploy to Cloudflare](https://dash.cloudflare.com/?to=/:account/pages/new/provider/github) — select repo, output dir: `public/` |
 | **GitHub Pages** | Settings → Pages → Source: `main` branch, `/public` folder |
 
 ---
@@ -162,9 +163,57 @@ docker build -t tgmoji .
 docker run -p 8080:80 tgmoji
 ```
 
-### Method 6: Vercel / Netlify / Cloudflare Pages
+### Method 6: Cloudflare Pages
 
-See the full [Deployment Guide](docs/DEPLOYMENT.md) for one-click deploy buttons and platform-specific settings.
+TGmoji includes ready-to-use Cloudflare config files (`wrangler.toml`, `public/_headers`, `public/_routes.json`).
+
+**Option A — Cloudflare Dashboard:**
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **Create**
+2. Connect your GitHub repo
+3. Build settings:
+   - Build command: _(leave empty)_
+   - Build output directory: `public/`
+4. Deploy
+
+**Option B — Wrangler CLI:**
+
+```bash
+# Install wrangler
+npm install -g wrangler
+
+# Authenticate
+wrangler login
+
+# Deploy directly
+wrangler pages deploy public/ --project-name=tgmoji
+```
+
+**Option C — GitHub Actions CI/CD:**
+
+Create `.github/workflows/cloudflare-pages.yml`:
+
+```yaml
+name: Deploy to Cloudflare Pages
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public/ --project-name=tgmoji
+```
+
+> **Note:** Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as GitHub secrets.
+
+See the full [Deployment Guide](docs/DEPLOYMENT.md) for all platforms and detailed Cloudflare configuration.
 
 ### Custom Domain & SSL
 
@@ -179,32 +228,32 @@ sudo certbot --nginx -d tgmoji.example.com
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                   Your Browser                        │
-│                                                      │
-│  ┌────────────┐   ┌────────────────────────────┐     │
-│  │ Upload SVG │──▶│   Iframe Renderer           │     │
-│  └────────────┘   │   CSS @keyframes + SMIL     │     │
-│                   │   Web Animations API seek    │     │
-│                   └────────────┬─────────────────┘     │
-│                                │                       │
-│                   ┌────────────▼─────────────────┐     │
-│                   │   Canvas Capture              │     │
-│                   │   getComputedStyle → clone     │     │
-│                   │   XMLSerializer → Blob → img  │     │
-│                   └────────────┬─────────────────┘     │
-│                                │                       │
-│            ┌───────────────────┼────────────────┐      │
-│            │                   │                │      │
-│  ┌─────────▼──────┐  ┌────────▼──────┐  ┌──────▼───┐ │
-│  │  gif.js         │  │ MediaRecorder │  │ Sticker  │ │
-│  │  (Web Workers)  │  │ (VP9 WebM)   │  │ 512px    │ │
-│  └────────┬───────┘  └──────┬────────┘  └────┬─────┘ │
-│           │                 │                │        │
-│  ┌────────▼─────────────────▼────────────────▼──────┐ │
-│  │              Download as Blob                     │ │
-│  └──────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   Your Browser                           │
+│                                                          │
+│  ┌────────────┐   ┌───────────────────────────────┐      │
+│  │ Upload SVG │──▶│   Iframe Renderer             │      │
+│  └────────────┘   │   CSS @keyframes + SMIL       │      │
+│                   │   Web Animations API seek     │      │
+│                   └────────────┬──────────────────┘      │
+│                                │                         │
+│                   ┌────────────▼──────────────────┐      │
+│                   │   Canvas Capture              │      │
+│                   │   getComputedStyle → clone    │      │
+│                   │   XMLSerializer → Blob → img  │      │
+│                   └────────────┬──────────────────┘      │
+│                                │                         │
+│            ┌───────────────────┼────────────────┐        │
+│            │                   │                │        │
+│  ┌─────────▼──────┐   ┌────────▼──────┐  ┌──────▼───┐    │
+│  │  gif.js        │   │ MediaRecorder │  │ Sticker  │    │
+│  │  (Web Workers) │   │ (VP9 WebM)    │  │ 512px    │    │
+│  └────────┬───────┘   └──────┬────────┘  └─────┬────┘    │
+│           │                  │                 │         │
+│  ┌────────▼──────────────────▼─────────────────▼──────┐  │
+│  │              Download as Blob                      │  │
+│  └────────────────────────────────────────────────────┘. │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### How Animation Capture Works
@@ -226,15 +275,18 @@ tgmoji/
 │   ├── app.js                  # UI logic & event handlers
 │   ├── converter.js            # Client-side conversion engine
 │   ├── gif.worker.js           # gif.js Web Worker (local copy)
-│   └── style.css               # Design system & styles
+│   ├── style.css               # Design system & styles
+│   ├── _headers                # Cloudflare Pages headers config
+│   └── _routes.json            # Cloudflare Pages routing config
 │
 ├── docs/                       # Documentation
 │   ├── API.md                  # Client-side API reference
 │   └── DEPLOYMENT.md           # Platform deployment guide
 │
-├── package.json                # Dev server script (npx serve)
-├── vercel.json                 # Vercel config (root = public/)
+├── wrangler.toml               # Cloudflare Pages/Workers config
+├── vercel.json                 # Vercel config
 ├── netlify.toml                # Netlify config
+├── package.json                # Dev server script (npx serve)
 ├── CONTRIBUTING.md             # Contribution guidelines
 ├── LICENSE                     # MIT License
 └── README.md                   # This file

@@ -1,0 +1,29 @@
+[
+  {
+    "for": "/*",
+    "values": {
+      "X-Frame-Options": "SAMEORIGIN",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    }
+  },
+  {
+    "for": "/*.js",
+    "values": {
+      "Cache-Control": "public, max-age=604800, immutable"
+    }
+  },
+  {
+    "for": "/*.css",
+    "values": {
+      "Cache-Control": "public, max-age=604800, immutable"
+    }
+  },
+  {
+    "for": "/*.svg",
+    "values": {
+      "Cache-Control": "public, max-age=604800"
+    }
+  }
+]
