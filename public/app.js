@@ -1,14 +1,10 @@
 // ═══════════════════════════════════════════════════
-// SVG → GIF & Telegram Emoji Converter — Frontend v2
+// TGmoji v2 — Frontend (Client-Side Processing)
+// All conversion runs in the browser — no server needed
 // ═══════════════════════════════════════════════════
 
 (function () {
     'use strict';
-
-    // ── API Base URL ──
-    // Set window.__API_BASE_URL__ in index.html for remote API deployments.
-    // Falls back to same-origin (for Docker / local dev).
-    const API_BASE = (window.__API_BASE_URL__ || '').replace(/\/+$/, '');
 
     // ── DOM References ──
     const dropZone = document.getElementById('dropZone');
@@ -29,6 +25,7 @@
     const resultsGrid = document.getElementById('resultsGrid');
 
     let selectedFile = null;
+    let svgContent = null;
 
     // ── Aspect ratio state ──
     let svgOriginalWidth = 386;
@@ -80,21 +77,22 @@
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            svgPreview.innerHTML = e.target.result;
+            svgContent = e.target.result;
+            svgPreview.innerHTML = svgContent;
             svgPreviewArea.classList.add('active');
-            autoDetectFromSVG(e.target.result);
+            autoDetectFromSVG(svgContent);
         };
         reader.readAsText(file);
     }
 
-    function autoDetectFromSVG(svgText) {
-        const durationMatch = svgText.match(/animation:\s*[\w-]+\s+([\d.]+)s/i);
+    function autoDetectFromSVG(text) {
+        const durationMatch = text.match(/animation:\s*[\w-]+\s+([\d.]+)s/i);
         if (durationMatch) {
             document.getElementById('duration').value = parseFloat(durationMatch[1]);
         }
 
-        const widthMatch = svgText.match(/width="(\d+)"/);
-        const heightMatch = svgText.match(/height="(\d+)"/);
+        const widthMatch = text.match(/width="(\d+)"/);
+        const heightMatch = text.match(/height="(\d+)"/);
         if (widthMatch && heightMatch) {
             svgOriginalWidth = parseInt(widthMatch[1]);
             svgOriginalHeight = parseInt(heightMatch[1]);
@@ -109,6 +107,7 @@
 
     function clearFile() {
         selectedFile = null;
+        svgContent = null;
         fileInput.value = '';
         fileInfo.classList.remove('active');
         svgPreviewArea.classList.remove('active');
@@ -168,11 +167,11 @@
         document.getElementById('stickerDims').textContent = `${sW} × ${sH}`;
     }
 
-    // ── Conversion ──
+    // ── Conversion (Client-Side!) ──
     convertBtn.addEventListener('click', startConversion);
 
     async function startConversion() {
-        if (!selectedFile) return;
+        if (!svgContent) return;
 
         const generateGif = document.getElementById('generateGif').checked;
         const generateWebm = document.getElementById('generateWebm').checked;
@@ -183,77 +182,62 @@
             return;
         }
 
-        const gifW = document.getElementById('gifWidth').value;
-        const gifH = document.getElementById('gifHeight').value;
-
-        const formData = new FormData();
-        formData.append('svg', selectedFile);
-        formData.append('gifWidth', gifW);
-        formData.append('gifHeight', gifH);
-        formData.append('fps', document.getElementById('fps').value);
-        formData.append('duration', document.getElementById('duration').value);
-        formData.append('telegramSize', document.getElementById('telegramSize').value);
-        formData.append('generateGif', generateGif);
-        formData.append('generateWebm', generateWebm);
-        formData.append('generateSticker', generateSticker);
-        formData.append('stickerSourceW', gifW);
-        formData.append('stickerSourceH', gifH);
+        const gifW = parseInt(document.getElementById('gifWidth').value) || 386;
+        const gifH = parseInt(document.getElementById('gifHeight').value) || 310;
+        const fps = parseInt(document.getElementById('fps').value) || 30;
+        const duration = parseFloat(document.getElementById('duration').value) || 2;
+        const telegramSize = parseInt(document.getElementById('telegramSize').value) || 100;
 
         convertBtn.disabled = true;
-        convertBtn.innerHTML = '<span class="btn-icon">⏳</span> Converting...';
+        convertBtn.innerHTML = '<span class="btn-icon">⏳</span> Processing…';
         progressSection.classList.add('active');
         resultsSection.classList.remove('active');
+        progressBar.style.width = '0%';
         hideError();
 
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 2;
-            if (progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-
-            if (progress < 15) {
-                progressText.textContent = 'Launching renderer...';
-            } else if (progress < 40) {
-                progressText.textContent = 'Capturing animation frames...';
-            } else if (progress < 55) {
-                progressText.textContent = 'Encoding GIF...';
-            } else if (progress < 70) {
-                progressText.textContent = 'Encoding Telegram Emoji...';
-            } else {
-                progressText.textContent = 'Encoding Telegram Sticker...';
-            }
-        }, 500);
-
         try {
-            const response = await fetchWithRetry(`${API_BASE}/api/convert`, {
-                method: 'POST',
-                body: formData
+            const results = await Converter.convert(svgContent, {
+                generateGif,
+                generateWebm,
+                generateSticker,
+                gifWidth: gifW,
+                gifHeight: gifH,
+                fps,
+                duration,
+                telegramSize,
+                stickerSourceW: gifW,
+                stickerSourceH: gifH,
+            }, (type, ...args) => {
+                // Progress callback
+                if (type === 'status') {
+                    progressText.textContent = args[0];
+                } else if (type === 'capture') {
+                    const [frame, total] = args;
+                    const pct = Math.round((frame / total) * 40); // Capture = 0-40%
+                    progressBar.style.width = pct + '%';
+                    progressText.textContent = `Capturing frame ${frame}/${total}…`;
+                } else if (type === 'gif') {
+                    const [done, total] = args;
+                    const pct = 40 + Math.round((done / total) * 30); // GIF = 40-70%
+                    progressBar.style.width = pct + '%';
+                    progressText.textContent = `Encoding GIF… ${done}%`;
+                } else if (type === 'webm') {
+                    const [frame, total] = args;
+                    const pct = 70 + Math.round((frame / total) * 30); // WebM = 70-100%
+                    progressBar.style.width = pct + '%';
+                    progressText.textContent = `Encoding WebM… ${frame}/${total}`;
+                }
             });
-
-            clearInterval(progressInterval);
-
-            if (response.status === 429) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || 'Server is busy. Please wait and try again.');
-            }
-
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || 'Conversion failed');
-            }
-
-            const data = await response.json();
 
             progressBar.style.width = '100%';
             progressText.textContent = 'Done! ✨';
 
             setTimeout(() => {
                 progressSection.classList.remove('active');
-                showResults(data.results);
-            }, 800);
+                showResults(results);
+            }, 600);
 
         } catch (err) {
-            clearInterval(progressInterval);
             progressSection.classList.remove('active');
             showError(err.message || 'Something went wrong during conversion.');
         } finally {
@@ -262,46 +246,21 @@
         }
     }
 
-    // ── Retry logic ──
-    async function fetchWithRetry(url, options, retries = 2) {
-        for (let i = 0; i <= retries; i++) {
-            try {
-                const resp = await fetch(url, options);
-                // Don't retry on client errors (4xx) except 429
-                if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
-                    return resp;
-                }
-                // Retry on 429 and 5xx
-                if ((resp.status === 429 || resp.status >= 500) && i < retries) {
-                    const delay = Math.pow(2, i) * 1000 + Math.random() * 500;
-                    progressText.textContent = `Server busy, retrying in ${Math.round(delay / 1000)}s...`;
-                    await new Promise(r => setTimeout(r, delay));
-                    continue;
-                }
-                return resp;
-            } catch (err) {
-                if (i === retries) throw err;
-                const delay = Math.pow(2, i) * 1000;
-                progressText.textContent = `Connection error, retrying in ${Math.round(delay / 1000)}s...`;
-                await new Promise(r => setTimeout(r, delay));
-            }
-        }
-    }
-
     // ── Results Display ──
     function showResults(results) {
         resultsGrid.innerHTML = '';
 
         if (results.gif) {
+            const url = URL.createObjectURL(results.gif.blob);
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
         <div class="result-preview">
-          <img src="${API_BASE}${results.gif.url}" alt="GIF output">
+          <img src="${url}" alt="GIF output">
         </div>
         <div class="result-label gif">Animated GIF</div>
         <div class="result-size">${results.gif.size}</div>
-        <a href="${API_BASE}${results.gif.url}" download="${results.gif.filename}" class="download-btn gif-btn">
+        <a href="${url}" download="${results.gif.filename}" class="download-btn gif-btn">
           ⬇ Download GIF
         </a>
       `;
@@ -309,19 +268,20 @@
         }
 
         if (results.webm) {
+            const url = URL.createObjectURL(results.webm.blob);
             const telegramOk = results.webm.meetsTelegramLimit;
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
         <div class="result-preview">
-          <video src="${API_BASE}${results.webm.url}" autoplay loop muted playsinline></video>
+          <video src="${url}" autoplay loop muted playsinline></video>
         </div>
         <div class="result-label webm">Telegram Emoji WebM</div>
         <div class="result-size">${results.webm.size}</div>
         <div class="telegram-badge ${telegramOk ? 'pass' : 'fail'}">
           ${telegramOk ? '✓ Within 256 KB limit' : '⚠ Exceeds 256 KB limit'}
         </div>
-        <a href="${API_BASE}${results.webm.url}" download="${results.webm.filename}" class="download-btn webm-btn">
+        <a href="${url}" download="${results.webm.filename}" class="download-btn webm-btn">
           ⬇ Download WebM
         </a>
       `;
@@ -329,19 +289,20 @@
         }
 
         if (results.sticker) {
+            const url = URL.createObjectURL(results.sticker.blob);
             const stickerOk = results.sticker.meetsTelegramLimit;
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
         <div class="result-preview">
-          <video src="${API_BASE}${results.sticker.url}" autoplay loop muted playsinline></video>
+          <video src="${url}" autoplay loop muted playsinline></video>
         </div>
         <div class="result-label sticker">Telegram Sticker WebM</div>
         <div class="result-size">${results.sticker.size} · ${results.sticker.dimensions}</div>
         <div class="telegram-badge ${stickerOk ? 'pass' : 'fail'}">
           ${stickerOk ? '✓ Within 256 KB limit' : '⚠ Exceeds 256 KB limit'}
         </div>
-        <a href="${API_BASE}${results.sticker.url}" download="${results.sticker.filename}" class="download-btn sticker-btn">
+        <a href="${url}" download="${results.sticker.filename}" class="download-btn sticker-btn">
           ⬇ Download Sticker
         </a>
       `;

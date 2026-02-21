@@ -1,210 +1,104 @@
-# TGmoji — API Reference
+# 📡 Client-Side API Reference
 
-## Base URL
-
-```
-http://localhost:3000          (local / Docker)
-https://your-site.com         (production — set via SITE_URL env)
-```
-
-All endpoints are prefixed with `/api`. The base URL is determined by where you deploy the container — no code changes needed.
+TGmoji v2 processes everything in the browser. There is no server API. Instead, the conversion is powered by JavaScript modules loaded in the page.
 
 ---
 
-## Authentication
+## Converter Module
 
-TGmoji does not require authentication. Rate limiting is applied per IP address.
+The global `Converter` object (defined in `converter.js`) exposes the following functions:
 
----
+### `Converter.convert(svgText, settings, onProgress)`
 
-## Endpoints
+Full conversion pipeline. Returns an object with `gif`, `webm`, and `sticker` results.
 
-### `POST /api/convert`
+**Parameters:**
 
-Convert an animated SVG file to GIF, Telegram emoji WebM, and/or Telegram sticker WebM.
+| Name | Type | Description |
+|------|------|-------------|
+| `svgText` | `string` | Raw SVG markup (contents of the `.svg` file) |
+| `settings.generateGif` | `boolean` | Whether to generate a GIF |
+| `settings.generateWebm` | `boolean` | Whether to generate a Telegram Emoji WebM |
+| `settings.generateSticker` | `boolean` | Whether to generate a Telegram Sticker WebM |
+| `settings.gifWidth` | `number` | GIF output width in pixels |
+| `settings.gifHeight` | `number` | GIF output height in pixels |
+| `settings.fps` | `number` | Frames per second (1–60) |
+| `settings.duration` | `number` | Animation duration in seconds |
+| `settings.telegramSize` | `number` | Emoji square size (default: 100px) |
+| `settings.stickerSourceW` | `number` | Source width for sticker aspect ratio |
+| `settings.stickerSourceH` | `number` | Source height for sticker aspect ratio |
+| `onProgress` | `function` | Progress callback: `(type, ...args)` |
 
-**Rate Limit:** 10 requests per 15 minutes per IP (configurable via `CONVERT_RATE_LIMIT_MAX`).
+**Returns:** `Promise<object>` with shape:
 
-#### Request
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `svg` | File | ✅ | — | The SVG file to convert (max `MAX_FILE_SIZE_MB`, default 10 MB) |
-| `gifWidth` | Number | ❌ | `386` | GIF output width (16–2048 px) |
-| `gifHeight` | Number | ❌ | `310` | GIF output height (16–2048 px) |
-| `fps` | Number | ❌ | `30` | Frame rate (1–60) |
-| `duration` | Number | ❌ | `2` | Animation duration in seconds (0.5–10) |
-| `telegramSize` | Number | ❌ | `100` | Telegram emoji size (16–512 px) |
-| `generateGif` | Boolean | ❌ | `true` | Generate GIF output |
-| `generateWebm` | Boolean | ❌ | `true` | Generate Telegram emoji WebM |
-| `generateSticker` | Boolean | ❌ | `true` | Generate Telegram sticker WebM |
-| `stickerSourceW` | Number | ❌ | `gifWidth` | Source width for sticker aspect ratio |
-| `stickerSourceH` | Number | ❌ | `gifHeight` | Source height for sticker aspect ratio |
-
-**Content-Type:** `multipart/form-data`
-
-#### Example
-
-```bash
-# Convert with default settings
-curl -X POST http://localhost:3000/api/convert \
-  -F "svg=@animation.svg"
-
-# Convert with custom settings
-curl -X POST http://localhost:3000/api/convert \
-  -F "svg=@animation.svg" \
-  -F "gifWidth=400" \
-  -F "gifHeight=400" \
-  -F "fps=24" \
-  -F "duration=2" \
-  -F "generateGif=true" \
-  -F "generateWebm=true" \
-  -F "generateSticker=true"
-```
-
-#### Response — `200 OK`
-
-```json
+```js
 {
-  "success": true,
-  "results": {
-    "gif": {
-      "filename": "animation-1708430400000.gif",
-      "url": "/api/download/animation-1708430400000.gif",
-      "size": "124.5 KB"
-    },
-    "webm": {
-      "filename": "animation-emoji-1708430400000.webm",
-      "url": "/api/download/animation-emoji-1708430400000.webm",
-      "size": "18.2 KB",
-      "meetsTelegramLimit": true
-    },
-    "sticker": {
-      "filename": "animation-sticker-1708430400000.webm",
-      "url": "/api/download/animation-sticker-1708430400000.webm",
-      "size": "42.7 KB",
-      "dimensions": "512×411",
-      "meetsTelegramLimit": true
-    }
-  }
+  gif: { blob: Blob, filename: string, size: string },
+  webm: { blob: Blob, filename: string, size: string, meetsTelegramLimit: boolean },
+  sticker: { blob: Blob, filename: string, size: string, dimensions: string, meetsTelegramLimit: boolean }
 }
 ```
 
-#### Error Responses
-
-| Status | Body | Condition |
-|--------|------|-----------|
-| `400` | `{ "error": "No SVG file uploaded" }` | Missing file |
-| `413` | `{ "error": "File too large..." }` | File exceeds `MAX_FILE_SIZE_MB` |
-| `429` | `{ "error": "Too many conversions..." }` | Rate limit exceeded |
-| `429` | `{ "error": "Server is busy..." }` | Queue full (`MAX_QUEUE_SIZE` reached) |
-| `500` | `{ "error": "Conversion failed" }` | Internal error |
-
 ---
 
-### `GET /api/download/:filename`
+### `Converter.captureFrames(svgText, options, onProgress)`
 
-Download a converted output file.
-
-#### Parameters
+Captures individual frames from an animated SVG.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `filename` | String | Output filename from the convert response |
+| `svgText` | `string` | Raw SVG markup |
+| `options.width` | `number` | Frame width |
+| `options.height` | `number` | Frame height |
+| `options.fps` | `number` | Frames per second |
+| `options.duration` | `number` | Duration in seconds |
 
-#### Response
-
-The file is returned as an attachment download with the appropriate MIME type.
-
-#### Errors
-
-| Status | Body | Condition |
-|--------|------|-----------|
-| `404` | `{ "error": "File not found" }` | File doesn't exist or expired |
-
-> **Note:** Output files are automatically deleted after `OUTPUT_TTL_MIN` minutes (default: 60).
+**Returns:** `Promise<ImageData[]>` — array of canvas ImageData objects.
 
 ---
 
-### `GET /api/health`
+### `Converter.framesToGIF(frames, options, onProgress)`
 
-Health check endpoint with system diagnostics. Used by Docker's built-in `HEALTHCHECK` and external monitoring.
+Encodes frames into an animated GIF using gif.js Web Workers.
 
-#### Response — `200 OK`
-
-```json
-{
-  "status": "ok",
-  "version": "2.0.0",
-  "uptime": 3600,
-  "env": "production",
-  "queue": {
-    "activeJobs": 1,
-    "queueLength": 3,
-    "maxConcurrent": 3,
-    "maxQueueSize": 20
-  },
-  "browserPool": {
-    "size": 3,
-    "available": 2,
-    "borrowed": 1,
-    "pending": 0
-  },
-  "memory": {
-    "rss": "128 MB",
-    "heapUsed": "45 MB"
-  }
-}
-```
+**Returns:** `Promise<Blob>` — GIF file as a Blob.
 
 ---
 
-### `GET /api/queue-status`
+### `Converter.framesToWebM(frames, options, onProgress)`
 
-Get current job queue statistics.
+Encodes frames into a VP9 WebM using the MediaRecorder API.
 
-#### Response — `200 OK`
+**Returns:** `Promise<Blob>` — WebM file as a Blob.
 
-```json
-{
-  "activeJobs": 2,
-  "queueLength": 5,
-  "maxConcurrent": 3,
-  "maxQueueSize": 20
-}
-```
+> **Note:** Requires Chrome, Firefox, or Edge. Safari does not support VP9 MediaRecorder.
 
 ---
 
-## Rate Limiting
+### `Converter.stickerDimensions(width, height)`
 
-All rate limits are configurable via environment variables.
+Computes Telegram sticker dimensions (one side = 512px).
 
-| Scope | Default Limit | Window | Env Var |
-|-------|------|--------|---------|
-| Global (all endpoints) | 100 requests | `RATE_LIMIT_WINDOW_MS` (15 min) | `RATE_LIMIT_MAX` |
-| Conversion (`/api/convert`) | 10 requests | `RATE_LIMIT_WINDOW_MS` (15 min) | `CONVERT_RATE_LIMIT_MAX` |
-
-Rate limit headers are included in responses:
-
-```
-RateLimit-Limit: 10
-RateLimit-Remaining: 7
-RateLimit-Reset: 1708431300
-```
+**Returns:** `{ w: number, h: number }`
 
 ---
 
-## Response Headers
+## Browser Requirements
 
-| Header | Description |
-|--------|-------------|
-| `X-Request-Id` | Unique request identifier for tracing |
-| `X-RateLimit-*` | Rate limiting information |
-| Standard Helmet headers | Security headers (CSP, XSS, HSTS, etc.) |
+| Feature | Required For | Support |
+|---------|-------------|---------|
+| Canvas API | All outputs | All modern browsers |
+| Web Workers | GIF encoding | All modern browsers |
+| MediaRecorder (VP9) | WebM output | Chrome, Firefox, Edge |
+| SVG Animation API | Frame capture | All modern browsers |
 
 ---
 
-## Configurable Limits
+## Telegram Limits
 
-All limits mentioned in this document can be changed via environment variables without modifying code. See the [Deployment Guide](DEPLOYMENT.md#environment-variables) for the full list.
+| Format | Max Size | Dimensions |
+|--------|----------|------------|
+| Emoji | 256 KB | 100×100 px |
+| Sticker | 256 KB | 512px (longest side) |
+| Duration | 3 seconds | — |
+| Codec | VP9 | WebM container |

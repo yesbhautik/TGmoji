@@ -1,9 +1,6 @@
 # ──────────────────────────────────────────────────
-# Netlify — Static Frontend Deployment
-# The conversion API must be hosted separately.
-# Set the API URL via the VITE_API_URL env var in
-# Netlify dashboard, or edit window.__API_BASE_URL__
-# in index.html.
+# Netlify — TGmoji v2 Static Deployment
+# 100% client-side — no build step or API needed.
 # ──────────────────────────────────────────────────
 
 [build]

@@ -8,20 +8,18 @@
   <!-- Primary SEO -->
   <title>TGmoji — SVG to GIF & Telegram Emoji/Sticker Converter | Free Tool by Yesbhautik</title>
   <meta name="description"
-    content="Free online SVG to GIF converter by Bhautik Bavadiya (Yesbhautik) & YBX Labs. Convert animated SVG files to GIF, Telegram emoji WebM and Telegram sticker WebM with full transparency. Fast, private, enterprise-ready.">
+    content="Free online SVG to GIF converter by Bhautik Bavadiya (Yesbhautik) & YBX Labs. Convert animated SVG files to GIF, Telegram emoji WebM and Telegram sticker WebM with full transparency. Fast, private, runs entirely in your browser.">
   <meta name="keywords"
-    content="SVG to GIF, SVG converter, animated SVG, Telegram emoji converter, Telegram sticker maker, WebM converter, SVG to WebM, SVG animation, GIF maker, Yesbhautik, YBX Labs, Bhautik Bavadiya, yesbhautik.co.in, ybxlabs.com, free online converter, transparency GIF, VP9 WebM, animated sticker">
+    content="SVG to GIF, SVG converter, animated SVG, Telegram emoji converter, Telegram sticker maker, WebM converter, SVG to WebM, SVG animation, GIF maker, Yesbhautik, YBX Labs, Bhautik Bavadiya, yesbhautik.co.in, ybxlabs.com, free online converter, transparency GIF, VP9 WebM, animated sticker, client-side, no upload">
   <meta name="author" content="Bhautik Bavadiya (Yesbhautik) — YBX Labs">
   <meta name="robots" content="index, follow">
   <meta name="googlebot" content="index, follow">
-  <link rel="canonical" href="__SITE_URL__/">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="__SITE_URL__/">
   <meta property="og:title" content="SVG to GIF & Telegram Emoji Converter — Free Tool by YBX Labs">
   <meta property="og:description"
-    content="Convert animated SVGs to GIF, Telegram emoji & sticker WebM with transparency. Built by Bhautik Bavadiya (Yesbhautik) at YBX Labs.">
+    content="Convert animated SVGs to GIF, Telegram emoji & sticker WebM with transparency. Runs 100% in your browser — your files never leave your device. Built by Yesbhautik at YBX Labs.">
   <meta property="og:site_name" content="SVG Converter by YBX Labs">
   <meta property="og:locale" content="en_US">
 
@@ -29,7 +27,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SVG to GIF & Telegram Converter — Free Online Tool">
   <meta name="twitter:description"
-    content="Convert animated SVGs to GIF, Telegram emoji & sticker formats. By Yesbhautik & YBX Labs.">
+    content="Convert animated SVGs to GIF, Telegram emoji & sticker formats. 100% client-side — no uploads. By Yesbhautik & YBX Labs.">
   <meta name="twitter:creator" content="@yesbhautik">
   <meta name="twitter:site" content="@ybxlabs">
 
@@ -45,11 +43,10 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "SVG to GIF & Telegram Converter",
-    "url": "__SITE_URL__/",
-    "description": "Free online tool to convert animated SVG files to GIF, Telegram emoji WebM, and Telegram sticker WebM with full transparency support.",
+    "description": "Free online tool to convert animated SVG files to GIF, Telegram emoji WebM, and Telegram sticker WebM. Runs 100% client-side for maximum privacy.",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any",
-    "browserRequirements": "Requires a modern web browser",
+    "browserRequirements": "Requires a modern web browser with Canvas and Web Worker support",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -70,6 +67,8 @@
       "SVG to GIF conversion",
       "SVG to Telegram emoji WebM",
       "SVG to Telegram sticker WebM",
+      "100% client-side processing",
+      "No file uploads - complete privacy",
       "Transparency support",
       "Aspect ratio lock",
       "Configurable FPS and duration"
@@ -98,7 +97,10 @@
         TGmoji by YBX Labs
       </div>
       <h1>TGmoji</h1>
-      <p>Convert animated SVGs to GIF, Telegram emoji, and sticker formats with full transparency</p>
+      <p>Convert animated SVGs to GIF, Telegram emoji, and sticker formats — 100% in your browser</p>
+      <div class="privacy-note">
+        🔒 Your files never leave your device. All processing happens locally.
+      </div>
     </header>
 
     <!-- Upload Section -->
@@ -295,11 +297,16 @@
       <p>Built with ❤️ by <a href="https://yesbhautik.co.in" title="Bhautik Bavadiya — Yesbhautik" rel="author">Bhautik
           Bavadiya (Yesbhautik)</a> · <a href="https://ybxlabs.com" title="YBX Labs — Software & AI" rel="author">YBX
           Labs</a></p>
-      <p class="footer-tech">Powered by Puppeteer + FFmpeg · Enterprise-Ready · Open Source</p>
+      <p class="footer-tech">100% Client-Side · Canvas API + Web Workers · Open Source</p>
     </footer>
 
   </div>
 
+  <!-- gif.js library for GIF encoding (Web Worker based) -->
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <!-- Client-side conversion engine -->
+  <script src="converter.js"></script>
+  <!-- Application logic -->
   <script src="app.js"></script>
 </body>
 

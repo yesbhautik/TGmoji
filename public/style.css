@@ -150,6 +150,19 @@ body::before {
     margin: 0 auto;
 }
 
+.privacy-note {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: var(--accent-emerald);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
 /* ── Glass Card ── */
 .glass-card {
     background: var(--bg-card);

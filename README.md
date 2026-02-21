@@ -4,16 +4,15 @@
 
 ### SVG → GIF & Telegram Emoji/Sticker Converter
 
-**Enterprise-ready, open-source tool for converting animated SVGs into GIF, Telegram custom emoji, and Telegram sticker formats.**
+**100% client-side — runs entirely in your browser. Your files never leave your device.**
 
 [![Version](https://img.shields.io/badge/version-2.0.0-6366f1?style=for-the-badge)](https://tgmoji.ybxlabs.com)
 [![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)](LICENSE)
-[![Node](https://img.shields.io/badge/node-≥18-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](docker-compose.yml)
+[![Deploy](https://img.shields.io/badge/deploy-static-06b6d4?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
 <br />
 
-**[🌐 Live Demo](https://tgmoji.ybxlabs.com)** · **[📖 API Docs](docs/API.md)** · **[🚀 Deploy Guide](docs/DEPLOYMENT.md)** · **[🐛 Report Bug](https://github.com/yesbhautik/tgmoji/issues)**
+**[🌐 Live Demo](https://tgmoji.ybxlabs.com)** · **[🚀 Deploy Guide](docs/DEPLOYMENT.md)** · **[🐛 Report Bug](https://github.com/yesbhautik/tgmoji/issues)**
 
 <br />
 
@@ -31,84 +30,67 @@ Built with ❤️ by [Bhautik Bavadiya (Yesbhautik)](https://yesbhautik.co.in) �
 | 💬 **Telegram Emoji** | VP9 WebM at 100×100px, within Telegram's 256 KB limit |
 | 🏷️ **Telegram Sticker** | VP9 WebM with 512px side, auto-scaled aspect ratio, under 256 KB |
 | 🔗 **Aspect Ratio Lock** | Auto-syncs width/height to maintain original proportions |
-| ⏱️ **Timeline Control** | Frame-accurate animation capture via Puppeteer's Web Animations API |
-| 🏗️ **Enterprise-Ready** | Browser pooling, job queue, rate limiting, graceful shutdown |
-| 🐳 **Docker** | One-command deployment, multi-arch (AMD64 + ARM64), UI + API in one container |
-| 🔧 **Fully Configurable** | All URLs, limits, and behavior via environment variables — zero code changes |
-| 🌐 **Vercel/Netlify** | Static frontend deployment configs included |
+| 🔒 **100% Private** | All processing runs in your browser — files never leave your device |
+| ⚡ **No Server Needed** | Pure static site — deploy on Vercel, Netlify, GitHub Pages, anywhere |
+| 🎯 **Timeline Control** | Frame-accurate animation capture via SVG Animation API |
+| 🧵 **Web Workers** | GIF encoding runs in background threads for smooth UX |
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- **Node.js** ≥ 18
-- **npm** ≥ 9
-
-### Install & Run
+### Local Development
 
 ```bash
 # Clone the repository
 git clone https://github.com/yesbhautik/tgmoji.git
 cd tgmoji
 
-# Install dependencies
-npm install
-
-# Start development server
+# Start local dev server
 npm run dev
 ```
 
 Open **http://localhost:3000** in your browser.
 
-### Docker (Production)
+> **That's it!** No dependencies to install. No Docker. No environment variables. Just a static file server.
 
-```bash
-# Option A: Pull pre-built image from GitHub Container Registry
-docker pull ghcr.io/yesbhautik/tgmoji:latest
+### One-Click Deploy
 
-docker run -d --name tgmoji \
-  -p 3000:3000 \
-  -e SITE_URL=https://tgmoji.yourdomain.com \
-  ghcr.io/yesbhautik/tgmoji:latest
-
-# Option B: Build from source with Docker Compose
-git clone https://github.com/yesbhautik/tgmoji.git
-cd tgmoji
-SITE_URL=https://tgmoji.yourdomain.com docker compose up -d --build
-```
-
-> **Note:** `SITE_URL` is optional — it sets canonical/OG meta tags for SEO. Leave empty for localhost.
+| Platform | Deploy |
+|----------|--------|
+| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yesbhautik/tgmoji) |
+| **Netlify** | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yesbhautik/tgmoji) |
+| **GitHub Pages** | Push to `main` branch → Settings → Pages → Source: `public/` |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│              TGmoji Container :3000                    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
-│  │  Helmet   │ │   CORS   │ │  Morgan  │ │Rate Limit││
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
-│  ┌──────────────────────────────────────────────────┐│
-│  │         Static Files (public/)                    ││
-│  └──────────────────────────────────────────────────┘│
-│  ┌──────────────────────────────────────────────────┐│
-│  │            Job Queue (Semaphore)                  ││
-│  │  Max concurrent: 3 · Max pending: 20 · Timeout   ││
-│  └──────────────────────┬───────────────────────────┘│
-│                         │                             │
-│  ┌──────────────────────▼───────────────────────────┐│
-│  │         Browser Pool (generic-pool)               ││
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐          ││
-│  │  │Chromium 1│ │Chromium 2│ │Chromium 3│          ││
-│  │  └──────────┘ └──────────┘ └──────────┘          ││
-│  └──────────────────────────────────────────────────┘│
-│  ┌──────────────────────────────────────────────────┐│
-│  │       Auto Cleanup (30 min interval)              ││
-│  └──────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│               Your Browser                    │
+│                                              │
+│  ┌────────────┐   ┌──────────────────────┐   │
+│  │ Upload SVG │──▶│  SVG Animation API   │   │
+│  └────────────┘   │  setCurrentTime()    │   │
+│                   └──────────┬───────────┘   │
+│                              │               │
+│                   ┌──────────▼───────────┐   │
+│                   │   Canvas API         │   │
+│                   │   Frame Capture      │   │
+│                   └──────────┬───────────┘   │
+│                              │               │
+│            ┌─────────────────┼──────────┐    │
+│            │                 │          │    │
+│  ┌─────────▼──────┐ ┌───────▼──────┐ ┌─▼─┐ │
+│  │  gif.js         │ │ MediaRecorder│ │   │ │
+│  │  (Web Workers)  │ │ (VP9 WebM)  │ │512│ │
+│  └────────┬───────┘ └──────┬───────┘ └─┬─┘ │
+│           │                │           │    │
+│  ┌────────▼───────────────▼───────────▼──┐ │
+│  │         Download as Blob              │ │
+│  └───────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
 ```
 
 ---
@@ -117,33 +99,17 @@ SITE_URL=https://tgmoji.yourdomain.com docker compose up -d --build
 
 ```
 tgmoji/
-├── .github/workflows/          # CI/CD
-│   └── docker-build.yml        # Multi-arch Docker build → GHCR
-│
-├── src/                        # Server-side modules
-│   ├── index.js                # Application entry point
-│   ├── config.js               # Environment configuration
-│   ├── browserPool.js          # Puppeteer browser pooling
-│   ├── jobQueue.js             # Concurrency control queue
-│   ├── converter.js            # SVG → GIF/WebM conversion
-│   ├── cleanup.js              # Automatic file cleanup
-│   └── routes.js               # Express API routes
-│
-├── public/                     # Static frontend
+├── public/                     # Everything lives here
 │   ├── index.html              # Main page (SEO-optimized)
-│   ├── app.js                  # Frontend logic
+│   ├── app.js                  # UI logic & event handlers
+│   ├── converter.js            # Client-side conversion engine
 │   └── style.css               # Design system & styles
 │
 ├── docs/                       # Documentation
-│   ├── API.md                  # API reference
+│   ├── API.md                  # Client-side API reference
 │   └── DEPLOYMENT.md           # Deployment guide
 │
-├── Dockerfile                  # Multi-arch container (AMD64 + ARM64)
-├── docker-compose.yml          # One-command deployment
-├── docker-entrypoint.sh        # Runtime env injection into HTML
-├── .dockerignore               # Docker build exclusions
-├── .env.example                # Environment variables template
-├── package.json                # Dependencies & scripts
+├── package.json                # Scripts (dev server only)
 ├── CONTRIBUTING.md             # Contribution guidelines
 ├── LICENSE                     # MIT License
 └── README.md                   # This file
@@ -151,52 +117,29 @@ tgmoji/
 
 ---
 
-## ⚙️ Configuration
+## 🔧 How It Works
 
-Copy `.env.example` to `.env` and adjust:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SITE_URL` | _(empty)_ | Public URL for SEO meta tags (e.g. `https://tgmoji.yourdomain.com`) |
-| `PORT` | `3000` | Server port |
-| `PUBLIC_PORT` | `3000` | Host port (Docker Compose) |
-| `NODE_ENV` | `development` | Environment mode |
-| `CORS_ORIGIN` | `*` | Allowed CORS origins |
-| `MAX_CONCURRENT_BROWSERS` | `3` | Max Puppeteer instances |
-| `MAX_QUEUE_SIZE` | `20` | Max pending conversion jobs |
-| `RATE_LIMIT_MAX` | `100` | Requests per 15-min window |
-| `CONVERT_RATE_LIMIT_MAX` | `10` | Conversions per 15-min window |
-| `CLEANUP_INTERVAL_MIN` | `30` | File cleanup interval (minutes) |
-| `OUTPUT_TTL_MIN` | `60` | Output file lifetime (minutes) |
-| `MAX_FILE_SIZE_MB` | `10` | Max upload size |
-
-See [.env.example](.env.example) for the full list.
+1. **Upload** — Drop an animated SVG file
+2. **Configure** — Set dimensions, FPS, duration, and output formats
+3. **Convert** — The browser:
+   - Embeds the SVG in a hidden iframe
+   - Steps through the animation frame-by-frame using `SVGSVGElement.setCurrentTime()`
+   - Renders each frame to a `<canvas>` via `drawImage()`
+   - Encodes GIF using **gif.js** (Web Workers for performance)
+   - Encodes WebM using **MediaRecorder** (VP9 codec)
+4. **Download** — Files are created as in-memory Blobs — nothing is uploaded anywhere
 
 ---
 
-## 📡 API Reference
+## 🌐 Browser Support
 
-See the full [API Documentation](docs/API.md).
+| Browser | GIF | WebM (Emoji/Sticker) |
+|---------|-----|---------------------|
+| Chrome / Edge | ✅ | ✅ |
+| Firefox | ✅ | ✅ |
+| Safari | ✅ | ⚠️ Limited (no VP9 MediaRecorder) |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/convert` | `POST` | Convert SVG to GIF/WebM |
-| `/api/download/:file` | `GET` | Download output file |
-| `/api/health` | `GET` | Health check + diagnostics |
-| `/api/queue-status` | `GET` | Current queue stats |
-
----
-
-## 🚢 Deployment
-
-| Platform | Type | Guide |
-|----------|------|-------|
-| **Docker Compose** | Full stack (recommended) | [Deployment Guide](docs/DEPLOYMENT.md#docker-compose) |
-| **Vercel** | Static frontend only | [Deployment Guide](docs/DEPLOYMENT.md#vercel) |
-| **Netlify** | Static frontend only | [Deployment Guide](docs/DEPLOYMENT.md#netlify) |
-| **VPS / Cloud** | Manual setup | [Deployment Guide](docs/DEPLOYMENT.md#manual) |
-
-> **Note:** Vercel and Netlify deploy only the static frontend. The conversion API requires a server with Chromium — use Docker on a VPS, Cloud Run, or similar.
+> Safari users can still generate GIFs. WebM generation requires Chrome, Firefox, or Edge.
 
 ---
 
@@ -206,7 +149,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
 # Fork → Clone → Branch → Code → Test → PR
-npm run dev     # Start dev server with auto-reload
+npm run dev     # Start dev server
 ```
 
 ---
@@ -219,10 +162,10 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## 🙏 Credits
 
-- **[Puppeteer](https://pptr.dev/)** — Headless browser automation
-- **[FFmpeg](https://ffmpeg.org/)** — Video encoding
-- **[gif-encoder-2](https://github.com/benjaminadk/gif-encoder-2)** — GIF encoding
-- **[generic-pool](https://github.com/coopernurse/node-pool)** — Object pooling
+- **[gif.js](https://jnordberg.github.io/gif.js/)** — GIF encoding with Web Workers
+- **[MediaRecorder API](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder)** — WebM VP9 encoding
+- **[Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)** — Frame rendering
+- **[SVG Animation API](https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL)** — Timeline control
 
 ---
 
